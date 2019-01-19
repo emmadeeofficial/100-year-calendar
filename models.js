@@ -21,9 +21,9 @@ class YearData {
   constructor(yearNum){
     this.yearNum = yearNum;
     this.monthsData = {}
-    for (name of monthNames) {
+    for (let month of monthsLabels) {
       // store in dict for ease of access when dividing up months in blocks for representation
-      this.monthsData[name] = new MonthData(name, this.yearNum);
+      this.monthsData[month.name] = new MonthData(month.name, this.yearNum);
     }
   }
   buildRepresentation(draw, x, y) {
@@ -86,8 +86,9 @@ class DayData {
 class MonthGroup {
   // In the classic On Kawara version of this calendar, months are grouped by decades of a single month in the representation (i.e.: January 1900 -> January 1909)
   // This is done primarily for typesetting purposes. It creates a complexity however: the month's visual representation (as part of a decade) is distinct from its logical representation (as part of a year). This class and the MonthBlock class makes the bridge between the two
-  constructor(monthName, dataObj, draw) {
-    this.monthName = monthName;
+  constructor(monthLabel, dataObj, draw) {
+    this.monthName = monthLabel.name;
+    this.maxDays = monthLabel.maxDays;
     //fetch all month objects from the data object
     this.monthsData = dataObj.yearsData.map(year => year.monthsData[this.monthName]);
     this.monthBlocks = []; // initially no representation
@@ -101,7 +102,7 @@ class MonthGroup {
     for(let i=0; i<this.monthsData.length; i=i+monthBlockSize){
       let slice = this.monthsData.slice(i, i+monthBlockSize);
       let y = i*(daySize + (2*vPadding));
-      let monthBlock = new MonthBlock(slice);
+      let monthBlock = new MonthBlock(slice, this.maxDays);
       monthBlock.buildRepresentation(this.representation.canvas, 0, y);
       //TODO: make sure that everywhere, it's always the parent that controls the canvas' position
       //store all the MonthBlocks associated with a given MonthGroup
@@ -112,10 +113,10 @@ class MonthGroup {
 
 class MonthBlock {
   // An actual group of {monthBlockSize} months for several years
-  constructor(monthsData, draw){
+  constructor(monthsData, maxDays){
     this.monthsData = monthsData;
     //TODO: dynamically determine maxDays either based off of monthsData or based on some statically stored data (probably better that way)
-    this.maxDays = 31;
+    this.maxDays = maxDays;
   }
   buildRepresentation(draw, x=0, y=0){
     this.representation = new RepresentationDetails(draw, x, y);
