@@ -93,13 +93,13 @@ class MonthGroup {
     this.monthsData = dataObj.yearsData.map(year => year.monthsData[this.monthName]);
     this.monthBlocks = []; // initially no representation
   }
-  buildRepresentation(){
-    this.representation = new RepresentationDetails(draw, 0, 0);
+  buildRepresentation(draw, x, y){
+    this.representation = new RepresentationDetails(draw, x, y);
     this.draw();
   }
   draw() {
     // Group months and create respective blocks
-    for(let i=0; i<this.monthsData.length; i=i+monthBlockSize){
+    for(let i=0; i<period; i=i+monthBlockSize){
       let slice = this.monthsData.slice(i, i+monthBlockSize);
       let y = i*(daySize + (2*vPadding));
       let monthBlock = new MonthBlock(slice, this.maxDays);
@@ -149,5 +149,29 @@ class RepresentationDetails {
     this.canvas = draw.nested();
     // Position canvas
     this.canvas.attr({ x: x, y: y});
+  }
+}
+
+class CalendarRepresentation {
+  constructor(data) {
+    this.data = data;
+    this.masterDraw = SVG('drawing').size(3000, 3000);
+  }
+  buildRepresentation(draw, x=0, y=0){
+    this.representation = new RepresentationDetails(draw, x, y);
+    this.draw();
+  }
+  draw() {
+    var offset = 0;
+    //draw months
+    //for (let i=0; i<monthsLabels.length; i++) {
+    for (let i=0; i<2; i++) {
+      //TODO is it really necessary to pass the whole data object? seems like it but double check
+      var mg = new MonthGroup(monthsLabels[i], this.data, this.representation.canvas);
+      console.log(monthsLabels[i]);
+      console.log(offset);
+      mg.buildRepresentation(this.representation.canvas, offset, 0);
+      offset += (hPadding + (mg.maxDays*(daySize+interBoxPadding)));
+    }
   }
 }
