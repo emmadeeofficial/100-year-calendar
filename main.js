@@ -12,5 +12,6 @@ const monthsLabels = [{name: "January", maxDays: 31}, {name: "February", maxDays
 
 var data = new AllYearsData(2002);
 //TODO: have a larger object that handles the representation part
+var masterDraw = SVG('drawing').size(3000, 3000);
 var calendarRepresentation = new CalendarRepresentation(data);
-calendarRepresentation.buildRepresentation(calendarRepresentation.masterDraw);
+calendarRepresentation.buildRepresentation(masterDraw);

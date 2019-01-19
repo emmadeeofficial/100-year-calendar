@@ -155,7 +155,6 @@ class RepresentationDetails {
 class CalendarRepresentation {
   constructor(data) {
     this.data = data;
-    this.masterDraw = SVG('drawing').size(3000, 3000);
   }
   buildRepresentation(draw, x=0, y=0){
     this.representation = new RepresentationDetails(draw, x, y);
