@@ -121,48 +121,67 @@ class DayData {
 }
 
 
-class MonthGroup {
+class DataGroup {
   // In the classic On Kawara version of this calendar, months are grouped by decades of a single month in the representation (i.e.: January 1900 -> January 1909)
-  // This is done primarily for typesetting purposes. It creates a complexity however: the month's visual representation (as part of a decade) is distinct from its logical representation (as part of a year). This class and the MonthBlock class makes the bridge between the two
-  constructor(monthLabel, dataObj, draw) {
-    this.monthName = monthLabel.name;
-    this.maxDays = monthLabel.maxDays;
-    //fetch all month objects from the data object
-    //TODO: have monthsData refer to the index in the monthLabels consnt?
-    this.monthsData = dataObj.yearsData.map(year => year.monthsData[this.monthName]);
-    this.monthBlocks = []; // initially no representation
+  // This is done primarily for typesetting purposes. It creates a complexity however: the month's visual representation (as part of a decade) is distinct from its logical representation (as part of a year). This class and its child classes makes the bridge between the two
+  constructor(data, blockType) {
+    //fetch all year objects from the data object
+    this.data = data;
+    this.blocks = []; // initially no representation
+    this.blockType = blockType;
   }
   buildRepresentation(draw, x, y){
     this.representation = new RepresentationDetails(draw, x, y);
     this.draw();
   }
   draw() {
-    // Group months and create respective blocks
+    // Group year and create respective blocks
     for(let i=0; i<period; i=i+monthBlockSize){
-      let slice = this.monthsData.slice(i, i+monthBlockSize);
+      let slice = this.data.slice(i, i+monthBlockSize);
       let y = i*(daySize + (2*vPadding));
-      let monthBlock = new MonthBlock(slice, this.maxDays);
-      monthBlock.buildRepresentation(this.representation.canvas, 0, y);
+      //TODO: instead of "22", we should have the exact value computed.
+      let block = new this.blockType(slice, (this.maxDays ? this.maxDays : 22));
+      block.buildRepresentation(this.representation.canvas, 0, y);
       //TODO: make sure that everywhere, it's always the parent that controls the canvas' position
       //store all the MonthBlocks associated with a given MonthGroup
-      this.monthBlocks.push(monthBlock);
+      this.blocks.push(block);
     }
   }
 }
 
-class MonthBlock {
+
+class MonthGroup extends DataGroup {
+  constructor(monthLabel, dataObj) {
+  //fetch all month objects from the data object
+    var data = dataObj.yearsData.map(year => year.monthsData[monthLabel.name]);
+    super(data, MonthBlock);
+    //TODO: have monthsData refer to the index in the monthLabels consnt?
+    this.monthName = monthLabel.name;
+    this.maxDays = monthLabel.maxDays;
+  }
+}
+
+class YearGroup extends DataGroup {
+  // Equivalent of MonthGroup for year labels
+  constructor(dataObj) {
+    super(dataObj.yearsData, YearBlock);
+    this.width = 4;
+  }
+}
+
+class DataBlock {
   // An actual group of {monthBlockSize} months for several years
-  constructor(monthsData, maxDays){
-    this.monthsData = monthsData;
-    //TODO: dynamically determine maxDays either based off of monthsData or based on some statically stored data (probably better that way)
-    this.maxDays = maxDays;
+  constructor(data, width){
+    this.data = data;
+    //TODO: dynamically determine width either based off of monthsData or based on some statically stored data (probably better that way)
+    this.width = width;
   }
   buildRepresentation(draw, x=0, y=0){
     this.representation = new RepresentationDetails(draw, x, y);
     this.draw();
   }
   draw() {
-    let width = (daySize+interBoxPadding)*this.maxDays + (2*hPadding);
+    let width = (daySize+interBoxPadding)*this.width + (2*hPadding);
     let height = monthBlockSize*(daySize + (2*vPadding));
     var rect = this.representation.canvas.rect(width, height);
     const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
@@ -170,14 +189,39 @@ class MonthBlock {
     rect.attr({ fill: color });
     rect.attr({ x: 0, y: 0 });
     rect.attr({ stroke: '#000', 'stroke-width': 2});
-    rect.back();
+    rect.front();
     // represent months
-    for(let monthIdx in this.monthsData){
-      let monthObj = this.monthsData[monthIdx];
-      const y = ((2*vPadding)+daySize)*monthIdx;
-      monthObj.buildRepresentation(this.representation.canvas, 0, y);
+    for(let idx in this.data){
+      let dataObj = this.data[idx];
+      const y = ((2*vPadding)+daySize)*idx;
+      dataObj.buildRepresentation(this.representation.canvas, 0, y);
       //here we're not storing the representation of a given month as it's already stored in the data object
     }
+  }
+}
+
+class MonthBlock extends DataBlock {
+  // An actual group of {monthBlockSize} months for several years
+  constructor(data, width){
+    super(data, width);
+  }
+}
+
+class YearBlock extends DataBlock {
+  // An actual group of {monthBlockSize} months for several years
+  constructor(data, width){
+    super(data, width);
+  }
+}
+
+//TODO check if class inheritance is the right thing to do here, and if so, implement, otherwise delete
+class hasRepresentation {
+  constructor() {
+
+  }
+  buildRepresentation(draw, x=0, y=0){
+    this.representation = new RepresentationDetails(draw, x, y);
+    this.draw();
   }
 }
 
@@ -215,14 +259,16 @@ class CalendarRepresentation {
   }
   drawYearList(xOffset, yOffset){
     //TODO: this is ambiguous. Is data all the data or just the years? find way to make this more maintainable
-    this.data.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+    //this.data.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+    var yg = new YearGroup(this.data);
+    yg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
   }
   drawMonthGroups(xOffset, yOffset) {
     //draw months
     //for (let i=0; i<monthsLabels.length; i++) {
     for (let i=0; i<2; i++) {
       //TODO is it really necessary to pass the whole data object? seems like it but double check
-      var mg = new MonthGroup(monthsLabels[i], this.data, this.representation.canvas);
+      var mg = new MonthGroup(monthsLabels[i], this.data);
       mg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
       xOffset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
     }
