@@ -1,7 +1,7 @@
 const daySize = 20;
 const vPadding = 2;
-const hPadding = 2;
-const interBoxPadding = 2;
+const hPadding = 6;
+const interBoxPadding = 3;
 // period in years
 // code doesn't handle period that are not a multiple of the monthBlockSize well
 const period = 20;

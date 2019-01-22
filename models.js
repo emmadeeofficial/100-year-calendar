@@ -62,7 +62,7 @@ class MonthData {
   draw() {
     //draw a container rectangle for outlining
     //TODO: the width and height are repeated for the monthblock. find a way to not repeat yourself
-    let width = (daySize+interBoxPadding)*this.maxDays + (hPadding);
+    let width = (daySize+interBoxPadding)*this.maxDays + (2*hPadding);
     let height = (daySize + (2*vPadding));
     var rect = this.representation.canvas.rect(width, height);
     rect.fill({ opacity: 0 });
@@ -102,7 +102,7 @@ class DayData {
       , align: 'middle'
     });
     text.cx((daySize/2)+(text.length()/2));
-    text.cy(daySize/2)
+    text.cy((daySize/2)+(vPadding/2))
   }
 }
 
@@ -148,7 +148,7 @@ class MonthBlock {
     this.draw();
   }
   draw() {
-    let width = (daySize+interBoxPadding)*this.maxDays + (hPadding);
+    let width = (daySize+interBoxPadding)*this.maxDays + (2*hPadding);
     let height = monthBlockSize*(daySize + (2*vPadding));
     var rect = this.representation.canvas.rect(width, height);
     const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
@@ -196,7 +196,7 @@ class CalendarRepresentation {
       console.log(monthsLabels[i]);
       console.log(offset);
       mg.buildRepresentation(this.representation.canvas, offset, 0);
-      offset += (hPadding + (mg.maxDays*(daySize+interBoxPadding)));
+      offset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
     }
   }
 }
