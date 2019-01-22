@@ -1,5 +1,5 @@
 //TODO check if class inheritance is the right thing to do here, and if so, implement, otherwise delete
-class hasRepresentation {
+class HasRepresentation {
   constructor() {
   }
   buildRepresentation(draw, x=0, y=0){
@@ -8,7 +8,7 @@ class hasRepresentation {
   }
 }
 
-class AllYearsData extends hasRepresentation {
+class AllYearsData extends HasRepresentation {
   //contains all years
   constructor(startYear) {
     super();
@@ -24,7 +24,7 @@ class AllYearsData extends hasRepresentation {
   }
 }
 
-class YearData extends hasRepresentation {
+class YearData extends HasRepresentation {
   //contains data about a given year
   constructor(yearNum){
     super();
@@ -57,7 +57,7 @@ class YearData extends hasRepresentation {
   }
 }
 
-class MonthData extends hasRepresentation {
+class MonthData extends HasRepresentation {
   //contains data about a given month
   constructor(yearNum, monthNum, monthName, maxDays) {
     super();
@@ -91,7 +91,7 @@ class MonthData extends hasRepresentation {
   }
 }
 
-class DayData extends hasRepresentation {
+class DayData extends HasRepresentation {
   constructor(yearNum, monthNum, dayNum) {
     super();
     this.yearNum = yearNum;
@@ -119,7 +119,7 @@ class DayData extends hasRepresentation {
 }
 
 
-class DataGroup extends hasRepresentation {
+class DataGroup extends HasRepresentation {
   // In the classic On Kawara version of this calendar, months are grouped by decades of a single month in the representation (i.e.: January 1900 -> January 1909)
   // This is done primarily for typesetting purposes. It creates a complexity however: the month's visual representation (as part of a decade) is distinct from its logical representation (as part of a year). This class and its child classes makes the bridge between the two
   constructor(data, blockType) {
@@ -164,7 +164,7 @@ class YearGroup extends DataGroup {
   }
 }
 
-class DataBlock extends hasRepresentation {
+class DataBlock extends HasRepresentation {
   // An actual group of {monthBlockSize} months for several years
   constructor(data, width){
     super();
@@ -217,7 +217,7 @@ class RepresentationDetails {
   }
 }
 
-class CalendarRepresentation extends hasRepresentation {
+class CalendarRepresentation extends HasRepresentation {
   constructor(data) {
     super();
     this.data = data;
