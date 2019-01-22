@@ -176,9 +176,11 @@ class DataBlock extends HasRepresentation {
     let width = (daySize+interBoxPadding)*this.width + (2*hPadding);
     let height = monthBlockSize*(daySize + (2*vPadding));
     var rect = this.representation.canvas.rect(width, height);
-    const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
-    var color = items[Math.floor(Math.random()*items.length)];
-    rect.attr({ fill: color });
+    //TODO: maybe leave colors as an easter egg? :)
+    //const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
+    //var color = items[Math.floor(Math.random()*items.length)];
+    //rect.attr({ fill: color });
+    rect.fill({ opacity: 0 });
     rect.attr({ x: 0, y: 0 });
     rect.attr({ stroke: '#000', 'stroke-width': 2});
     rect.front();
@@ -218,21 +220,26 @@ class RepresentationDetails {
 }
 
 class CalendarRepresentation extends HasRepresentation {
-  constructor(data) {
+  constructor(data, xOffset, yOffset) {
     super();
     this.data = data;
+    this.xOffset = xOffset;
+    this.yOffset = yOffset;
   }
   draw() {
     //hacky use of calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
-    var xOffset = calendarBorderThickness*1.5;
-    var yOffset = calendarBorderThickness*1.5;
+    //TODO: fix confusing variable names here
+    var xOffset = this.xOffset + calendarBorderThickness*1.5;
+    //TODO: change this hard coded "40" that allows for month labels into something cleaner
+    var yOffset = this.yOffset + 40 + calendarBorderThickness*1.5;
     //width of calendar is calculated as result of drawing drawMonthgroups
     //TODO: SINCE MAXDAYS IS A CONSTANT, THIS SHOULD BE DONE WITHOUT HAVING TO RETURN VALUE FROM drawMonthGroups
     this.drawYearList(xOffset, yOffset);
     var yearListWidth = 2*(hPadding+daySize);
     xOffset += yearListWidth;
     xOffset = this.drawMonthGroups(xOffset, yOffset);
-    this.drawCalendarBorder(xOffset, 0);
+    // TODO: cleanup var names. the use of this.xOffset and xOffset is confusing
+    this.drawCalendarBorder(this.xOffset, this.yOffset + 40, xOffset-this.xOffset);
   }
   drawYearList(xOffset, yOffset){
     //TODO: this is ambiguous. Is data all the data or just the years? find way to make this more maintainable
@@ -240,24 +247,38 @@ class CalendarRepresentation extends HasRepresentation {
     var yg = new YearGroup(this.data);
     yg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
   }
+  drawMonthLabels(xOffset, yOffset, maxDays, monthName){
+    var text = this.representation.canvas.text(monthName);
+    //TODO: move all those font definitions in a single method?
+    text.font({
+      family:   'Source Sans Pro'
+      , size:     10
+      , anchor:   'middle'
+      , align: 'middle'
+    });
+    text.cx(((maxDays*(daySize+interBoxPadding)+2*hPadding)/2 + xOffset)
+    + (text.length()/2));
+    text.cy(45)
+  }
   drawMonthGroups(xOffset, yOffset) {
     //draw months
-    //for (let i=0; i<monthsLabels.length; i++) {
-    for (let i=0; i<2; i++) {
+    for (let i=0; i<monthsLabels.length; i++) {
+    //for (let i=0; i<2; i++) {
       //TODO is it really necessary to pass the whole data object? seems like it but double check
       var mg = new MonthGroup(monthsLabels[i], this.data);
       mg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+      this.drawMonthLabels(xOffset, yOffset, mg.maxDays, mg.monthName);
       xOffset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
     }
     return xOffset;
   }
-  drawCalendarBorder(xOffset, yOffset) {
+  drawCalendarBorder(xOffset, yOffset, widthOffset) {
     // draw bounding box
-    let width = xOffset-0.5*calendarBorderThickness;
-    let height = yOffset+(period*(daySize + (2*vPadding))+calendarBorderThickness);
+    let width = widthOffset-0.5*calendarBorderThickness;
+    let height = (period*(daySize + (2*vPadding))+calendarBorderThickness);
     var rect = this.representation.canvas.rect(width, height);
     rect.fill({ opacity: 0 });
-    rect.attr({ x: calendarBorderThickness, y: calendarBorderThickness });
+    rect.attr({ x: xOffset+calendarBorderThickness, y: yOffset+calendarBorderThickness });
     rect.attr({ stroke: '#000', 'stroke-width': calendarBorderThickness});
     rect.front();
   }
