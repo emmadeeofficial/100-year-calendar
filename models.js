@@ -23,7 +23,7 @@ class YearData {
     this.monthsData = {}
     for (let month of monthsLabels) {
       // store in dict for ease of access when dividing up months in blocks for representation
-      this.monthsData[month.name] = new MonthData(month.name, this.yearNum);
+      this.monthsData[month.name] = new MonthData(month.name, this.yearNum, month.maxDays);
     }
   }
   buildRepresentation(draw, x, y) {
@@ -40,8 +40,9 @@ class YearData {
 
 class MonthData {
   //contains data about a given month
-  constructor(monthName, yearNum) {
+  constructor(monthName, yearNum, maxDays) {
     this.monthName = monthName;
+    this.maxDays = maxDays;
     this.yearNum = yearNum;
     this.daysData = Array.from(new Array(31), (x,i) => i).map(dayNum => new DayData(dayNum, this.monthName, this.yearNum));
   }
@@ -50,6 +51,15 @@ class MonthData {
     this.draw();
   }
   draw() {
+    //draw a container rectangle for outlining
+    //TODO: the width and height are repeated for the monthblock. find a way to not repeat yourself
+    let width = (daySize+interBoxPadding)*this.maxDays + (hPadding);
+    let height = (daySize + (2*vPadding));
+    var rect = this.representation.canvas.rect(width, height);
+    rect.fill({ opacity: 0 });
+    rect.attr({ x: 0, y: 0 });
+    rect.attr({ stroke: '#000', 'stroke-width': 1});
+    rect.back();
     for(let dayIndex in this.daysData){
       const x = dayIndex*(daySize+interBoxPadding)+hPadding;
       this.daysData[dayIndex].buildRepresentation(this.representation.canvas, x);
@@ -130,6 +140,7 @@ class MonthBlock {
     var color = items[Math.floor(Math.random()*items.length)];
     rect.attr({ fill: color });
     rect.attr({ x: 0, y: 0 });
+    rect.attr({ stroke: '#000', 'stroke-width': 2});
     rect.back();
     // represent months
     for(let monthIdx in this.monthsData){
