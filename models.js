@@ -4,15 +4,16 @@ class AllYearsData {
     this.startYear = startYear;
     this.yearsData = Array.from(new Array(period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
   }
-  buildRepresentation(draw, x, y) {
-    //At the moment, we are not directly representing years
-    //TODO: generate year list here OR do it in separate object
-    return null;
+  buildRepresentation(draw, x, y){
+    this.representation = new RepresentationDetails(draw, x, y);
+    this.draw();
   }
   draw() {
-    //At the moment, we are not directly representing years
-    //TODO: generate year list here OR do it in separate object
-    return null;
+    var yOffset = 0;
+    for (let i=0; i<this.yearsData.length; i++) {
+      this.yearsData[i].buildRepresentation(this.representation.canvas, 0, yOffset)
+      yOffset += (daySize + (2*vPadding));
+    }
   }
 }
 
@@ -28,14 +29,27 @@ class YearData {
     }
   }
   buildRepresentation(draw, x, y) {
-    //At the moment, we are not directly representing years
-    //TODO: generate year list item here
-    return null;
+    this.representation = new RepresentationDetails(draw, x, y);
+    this.draw();
   }
   draw() {
-    //At the moment, we are not directly representing years
-    //TODO: generate year list item here
-    return null;
+    let width = 2*(hPadding+daySize);
+    let height = (daySize + (2*vPadding));
+    var rect = this.representation.canvas.rect(width, height);
+    rect.fill({ opacity: 0 });
+    rect.attr({ x: 0, y: 0 });
+    rect.attr({ stroke: '#000', 'stroke-width': 1});
+    rect.back();
+
+    var text = this.representation.canvas.text(String(this.yearNum));
+    text.font({
+      family:   'Monospace'
+      , size:     14
+      , anchor:   'middle'
+      , align: 'middle'
+    });
+    text.cx(Math.floor((width/2)+(text.length()/2)));
+    text.cy((daySize/2)+(vPadding/2))
   }
 }
 
@@ -187,16 +201,41 @@ class CalendarRepresentation {
     this.draw();
   }
   draw() {
-    var offset = 0;
+    //hacky use of calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
+
+    var xOffset = calendarBorderThickness*1.5;
+    var yOffset = calendarBorderThickness*1.5;
+    //width of calendar is calculated as result of drawing drawMonthgroups
+    //TODO: SINCE MAXDAYS IS A CONSTANT, THIS SHOULD BE DONE WITHOUT HAVING TO RETURN VALUE FROM drawMonthGroups
+    this.drawYearList(xOffset, yOffset);
+    var yearListWidth = 2*(hPadding+daySize);
+    xOffset += yearListWidth;
+    xOffset = this.drawMonthGroups(xOffset, yOffset);
+    this.drawCalendarBorder(xOffset, 0);
+  }
+  drawYearList(xOffset, yOffset){
+    //TODO: this is ambiguous. Is data all the data or just the years? find way to make this more maintainable
+    this.data.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+  }
+  drawMonthGroups(xOffset, yOffset) {
     //draw months
     //for (let i=0; i<monthsLabels.length; i++) {
     for (let i=0; i<2; i++) {
       //TODO is it really necessary to pass the whole data object? seems like it but double check
       var mg = new MonthGroup(monthsLabels[i], this.data, this.representation.canvas);
-      console.log(monthsLabels[i]);
-      console.log(offset);
-      mg.buildRepresentation(this.representation.canvas, offset, 0);
-      offset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
+      mg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+      xOffset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
     }
+    return xOffset;
+  }
+  drawCalendarBorder(xOffset, yOffset) {
+    // draw bounding box
+    let width = xOffset-0.5*calendarBorderThickness;
+    let height = yOffset+(period*(daySize + (2*vPadding))+calendarBorderThickness);
+    var rect = this.representation.canvas.rect(width, height);
+    rect.fill({ opacity: 0 });
+    rect.attr({ x: calendarBorderThickness, y: calendarBorderThickness });
+    rect.attr({ stroke: '#000', 'stroke-width': calendarBorderThickness});
+    rect.front();
   }
 }

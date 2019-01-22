@@ -4,8 +4,9 @@ const hPadding = 6;
 const interBoxPadding = 3;
 // period in years
 // code doesn't handle period that are not a multiple of the monthBlockSize well
-const period = 20;
+const period = 100;
 const monthBlockSize = 10;
+const calendarBorderThickness = 2;
 const monthsLabels = [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}, {name: "March", maxDays: 31}, {name: "April", maxDays: 30}, {name: "May", maxDays: 31}, {name: "June", maxDays: 30}, {name: "July", maxDays: 31}, {name: "August", maxDays: 31}, {name: "September", maxDays: 30}, {name: "October", maxDays: 31}, {name: "November", maxDays: 30}, {name: "December", maxDays: 31}];
 
 
