@@ -91,7 +91,7 @@ class DayData {
   }
   draw() {
     // TODO: make this modulable/configurable
-    const value = this.isSunday ? 'X' : this.dayNum;
+    const value = this.isSunday ? '•' : this.dayNum;
     var text = this.representation.canvas.text((add) => {
       add.tspan(value)
     });
