@@ -2,7 +2,7 @@ class AllYearsData {
   //contains all years
   constructor(startYear) {
     this.startYear = startYear;
-    this.yearsData = Array.from(new Array(100), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
+    this.yearsData = Array.from(new Array(period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
   }
   buildRepresentation(draw, x, y) {
     //At the moment, we are not directly representing years
@@ -21,9 +21,10 @@ class YearData {
   constructor(yearNum){
     this.yearNum = yearNum;
     this.monthsData = {}
-    for (let month of monthsLabels) {
+    for (let month = 0; month < monthsLabels.length; month++) {
+      console.log(typeof month);
       // store in dict for ease of access when dividing up months in blocks for representation
-      this.monthsData[month.name] = new MonthData(month.name, this.yearNum, month.maxDays);
+      this.monthsData[monthsLabels[month].name] = new MonthData(this.yearNum, month+1, monthsLabels[month].name, monthsLabels[month].maxDays);
     }
   }
   buildRepresentation(draw, x, y) {
@@ -40,11 +41,16 @@ class YearData {
 
 class MonthData {
   //contains data about a given month
-  constructor(monthName, yearNum, maxDays) {
+  constructor(yearNum, monthNum, monthName, maxDays) {
     this.monthName = monthName;
     this.maxDays = maxDays;
+    //TODO: determine whether we actually need both the name/maxdays and monthNum or if we could instead just have the index and fetch the rest from the const with all month labels
+    this.monthNum = monthNum;
     this.yearNum = yearNum;
-    this.daysData = Array.from(new Array(31), (x,i) => i).map(dayNum => new DayData(dayNum, this.monthName, this.yearNum));
+    // we use a moment.js abstraction to directly generate the right number of DayData object, instead of having the 29th day of february having to hide itself on non leap year. Moreover, we decrease the "human" month num by one as moment.js indexes month starting at 0
+    const numDays = moment().month(this.monthNum-1).year(yearNum).daysInMonth();
+    console.log(this.monthNum);
+    this.daysData = Array.from(new Array(numDays), (x,i) => i+1).map(dayNum => new DayData(this.yearNum, this.monthNum, dayNum));
   }
   buildRepresentation(draw, x, y){
     this.representation = new RepresentationDetails(draw, x, y);
@@ -68,10 +74,13 @@ class MonthData {
 }
 
 class DayData {
-  constructor(dayNum, monthName, yearNum) {
-    this.dayNum = dayNum;
-    this.monthName = monthName;
+  constructor(yearNum, monthNum, dayNum) {
     this.yearNum = yearNum;
+    this.monthNum = monthNum;
+    this.dayNum = dayNum;
+    // using moment.js, day of month is a number from 1 to 31
+    // calculating this for each day using moment.js is slight overkill, but it only affects the performance marginally, so we're doing it for ease of code maintenance. In theory, we could call the day() function on the first day of the sequence and determine the sundays that way, but that logic would have to be moved to the year, if not the general data container. We find the current solution easier to read.
+    this.isSunday = moment().month(this.monthNum-1).date(this.dayNum).year(yearNum).day() == 0;
   }
   buildRepresentation(draw, x, y){
     this.representation = new RepresentationDetails(draw, x, y);
@@ -79,7 +88,7 @@ class DayData {
   }
   draw() {
     var text = this.representation.canvas.text((add) => {
-      add.tspan(this.dayNum)
+      add.tspan(this.isSunday ? 'X' : this.dayNum)
     });
     text.font({
       family:   'Monospace'
@@ -100,6 +109,7 @@ class MonthGroup {
     this.monthName = monthLabel.name;
     this.maxDays = monthLabel.maxDays;
     //fetch all month objects from the data object
+    //TODO: have monthsData refer to the index in the monthLabels consnt?
     this.monthsData = dataObj.yearsData.map(year => year.monthsData[this.monthName]);
     this.monthBlocks = []; // initially no representation
   }
