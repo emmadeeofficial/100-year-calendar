@@ -1,12 +1,19 @@
-class AllYearsData {
-  //contains all years
-  constructor(startYear) {
-    this.startYear = startYear;
-    this.yearsData = Array.from(new Array(period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
+//TODO check if class inheritance is the right thing to do here, and if so, implement, otherwise delete
+class hasRepresentation {
+  constructor() {
   }
-  buildRepresentation(draw, x, y){
+  buildRepresentation(draw, x=0, y=0){
     this.representation = new RepresentationDetails(draw, x, y);
     this.draw();
+  }
+}
+
+class AllYearsData extends hasRepresentation {
+  //contains all years
+  constructor(startYear) {
+    super();
+    this.startYear = startYear;
+    this.yearsData = Array.from(new Array(period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
   }
   draw() {
     var yOffset = 0;
@@ -17,9 +24,10 @@ class AllYearsData {
   }
 }
 
-class YearData {
+class YearData extends hasRepresentation {
   //contains data about a given year
   constructor(yearNum){
+    super();
     this.yearNum = yearNum;
     this.monthsData = {}
     for (let month = 0; month < monthsLabels.length; month++) {
@@ -27,10 +35,6 @@ class YearData {
       // store in dict for ease of access when dividing up months in blocks for representation
       this.monthsData[monthsLabels[month].name] = new MonthData(this.yearNum, month+1, monthsLabels[month].name, monthsLabels[month].maxDays);
     }
-  }
-  buildRepresentation(draw, x, y) {
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
   }
   draw() {
     let width = 2*(hPadding+daySize);
@@ -53,9 +57,10 @@ class YearData {
   }
 }
 
-class MonthData {
+class MonthData extends hasRepresentation {
   //contains data about a given month
   constructor(yearNum, monthNum, monthName, maxDays) {
+    super();
     this.monthName = monthName;
     //maxDays determines the max possible number of days in a certain month, not whether the one we're dealing with actually has this max (think of February)
     this.maxDays = maxDays;
@@ -68,10 +73,6 @@ class MonthData {
       numDays = moment().month(this.monthNum-1).year(yearNum).daysInMonth();
     }
     this.daysData = Array.from(new Array(numDays), (x,i) => i+1).map(dayNum => new DayData(this.yearNum, this.monthNum, dayNum));
-  }
-  buildRepresentation(draw, x, y){
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
   }
   draw() {
     //draw a container rectangle for outlining
@@ -90,18 +91,15 @@ class MonthData {
   }
 }
 
-class DayData {
+class DayData extends hasRepresentation {
   constructor(yearNum, monthNum, dayNum) {
+    super();
     this.yearNum = yearNum;
     this.monthNum = monthNum;
     this.dayNum = dayNum;
     // using moment.js, day of month is a number from 1 to 31
     // calculating this for each day using moment.js is slight overkill, but it only affects the performance marginally, so we're doing it for ease of code maintenance. In theory, we could call the day() function on the first day of the sequence and determine the sundays that way, but that logic would have to be moved to the year, if not the general data container. We find the current solution easier to read.
     this.isSunday = moment().month(this.monthNum-1).date(this.dayNum).year(yearNum).day() == 0;
-  }
-  buildRepresentation(draw, x, y){
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
   }
   draw() {
     // TODO: make this modulable/configurable
@@ -121,18 +119,15 @@ class DayData {
 }
 
 
-class DataGroup {
+class DataGroup extends hasRepresentation {
   // In the classic On Kawara version of this calendar, months are grouped by decades of a single month in the representation (i.e.: January 1900 -> January 1909)
   // This is done primarily for typesetting purposes. It creates a complexity however: the month's visual representation (as part of a decade) is distinct from its logical representation (as part of a year). This class and its child classes makes the bridge between the two
   constructor(data, blockType) {
+    super();
     //fetch all year objects from the data object
     this.data = data;
     this.blocks = []; // initially no representation
     this.blockType = blockType;
-  }
-  buildRepresentation(draw, x, y){
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
   }
   draw() {
     // Group year and create respective blocks
@@ -169,16 +164,13 @@ class YearGroup extends DataGroup {
   }
 }
 
-class DataBlock {
+class DataBlock extends hasRepresentation {
   // An actual group of {monthBlockSize} months for several years
   constructor(data, width){
+    super();
     this.data = data;
     //TODO: dynamically determine width either based off of monthsData or based on some statically stored data (probably better that way)
     this.width = width;
-  }
-  buildRepresentation(draw, x=0, y=0){
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
   }
   draw() {
     let width = (daySize+interBoxPadding)*this.width + (2*hPadding);
@@ -214,17 +206,6 @@ class YearBlock extends DataBlock {
   }
 }
 
-//TODO check if class inheritance is the right thing to do here, and if so, implement, otherwise delete
-class hasRepresentation {
-  constructor() {
-
-  }
-  buildRepresentation(draw, x=0, y=0){
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
-  }
-}
-
 class RepresentationDetails {
   // handles drawing canvas creation and positioning to enable components to draw without having to take into account their positioning in space
   constructor(draw, x=0, y=0) {
@@ -236,17 +217,13 @@ class RepresentationDetails {
   }
 }
 
-class CalendarRepresentation {
+class CalendarRepresentation extends hasRepresentation {
   constructor(data) {
+    super();
     this.data = data;
-  }
-  buildRepresentation(draw, x=0, y=0){
-    this.representation = new RepresentationDetails(draw, x, y);
-    this.draw();
   }
   draw() {
     //hacky use of calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
-
     var xOffset = calendarBorderThickness*1.5;
     var yOffset = calendarBorderThickness*1.5;
     //width of calendar is calculated as result of drawing drawMonthgroups
