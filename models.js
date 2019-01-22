@@ -43,13 +43,16 @@ class MonthData {
   //contains data about a given month
   constructor(yearNum, monthNum, monthName, maxDays) {
     this.monthName = monthName;
+    //maxDays determines the max possible number of days in a certain month, not whether the one we're dealing with actually has this max (think of February)
     this.maxDays = maxDays;
     //TODO: determine whether we actually need both the name/maxdays and monthNum or if we could instead just have the index and fetch the rest from the const with all month labels
     this.monthNum = monthNum;
     this.yearNum = yearNum;
-    // we use a moment.js abstraction to directly generate the right number of DayData object, instead of having the 29th day of february having to hide itself on non leap year. Moreover, we decrease the "human" month num by one as moment.js indexes month starting at 0
-    const numDays = moment().month(this.monthNum-1).year(yearNum).daysInMonth();
-    console.log(this.monthNum);
+    var numDays = this.maxDays
+    if(this.monthNum == 2){
+      // we use a moment.js abstraction to obtain the actual number of days of the month and directly generate the right number of DayData object, instead of having the 29th day of february having to hide itself on non leap year. Moreover, we decrease the "human" month num by one as moment.js indexes month starting at 0
+      numDays = moment().month(this.monthNum-1).year(yearNum).daysInMonth();
+    }
     this.daysData = Array.from(new Array(numDays), (x,i) => i+1).map(dayNum => new DayData(this.yearNum, this.monthNum, dayNum));
   }
   buildRepresentation(draw, x, y){
@@ -87,8 +90,10 @@ class DayData {
     this.draw();
   }
   draw() {
+    // TODO: make this modulable/configurable
+    const value = this.isSunday ? 'X' : this.dayNum;
     var text = this.representation.canvas.text((add) => {
-      add.tspan(this.isSunday ? 'X' : this.dayNum)
+      add.tspan(value)
     });
     text.font({
       family:   'Monospace'
