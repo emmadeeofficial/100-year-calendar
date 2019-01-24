@@ -180,7 +180,7 @@ class DataBlock extends HasRepresentation {
     //const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
     //var color = items[Math.floor(Math.random()*items.length)];
     //rect.attr({ fill: color });
-    rect.fill({ opacity: 0 });
+    rect.attr({ fill: 'white' });
     rect.attr({ x: 0, y: 0 });
     rect.attr({ stroke: '#000', 'stroke-width': 2});
     rect.front();
@@ -252,7 +252,7 @@ class CalendarRepresentation extends HasRepresentation {
     //TODO: move all those font definitions in a single method?
     text.font({
       family:   'Source Sans Pro'
-      , size:     10
+      , size:     12
       , anchor:   'middle'
       , align: 'middle'
     });
