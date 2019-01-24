@@ -3,7 +3,12 @@ class HasRepresentation {
   constructor() {
   }
   buildRepresentation(draw, x=0, y=0){
-    this.representation = new RepresentationDetails(draw, x, y);
+    // We initialize representations here rather than in the constructor as the draw argument is not necessarily available when the object is first created.
+    this.x = x;
+    this.y = y;
+    this.representation = draw.nested();
+    // Position nested container
+    this.representation.attr({ x: x, y: y});
     this.draw();
   }
 }
@@ -18,7 +23,7 @@ class AllYearsData extends HasRepresentation {
   draw() {
     var yOffset = 0;
     for (let i=0; i<this.yearsData.length; i++) {
-      this.yearsData[i].buildRepresentation(this.representation.canvas, 0, yOffset)
+      this.yearsData[i].buildRepresentation(this.representation, 0, yOffset)
       yOffset += (daySize + (2*vPadding));
     }
   }
@@ -39,13 +44,13 @@ class YearData extends HasRepresentation {
   draw() {
     let width = 2*(hPadding+daySize);
     let height = (daySize + (2*vPadding));
-    var rect = this.representation.canvas.rect(width, height);
+    var rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
     rect.attr({ x: 0, y: 0 });
     rect.attr({ stroke: '#000', 'stroke-width': 1});
     rect.back();
 
-    var text = this.representation.canvas.text(String(this.yearNum));
+    var text = this.representation.text(String(this.yearNum));
     text.font({
       family:   'Source Sans Pro'
       , size:     textSize
@@ -79,14 +84,14 @@ class MonthData extends HasRepresentation {
     //TODO: the width and height are repeated for the monthblock. find a way to not repeat yourself
     let width = (daySize+interBoxPadding)*this.maxDays + (2*hPadding);
     let height = (daySize + (2*vPadding));
-    var rect = this.representation.canvas.rect(width, height);
+    var rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
     rect.attr({ x: 0, y: 0 });
     rect.attr({ stroke: '#000', 'stroke-width': 1});
     rect.back();
     for(let dayIndex in this.daysData){
       const x = dayIndex*(daySize+interBoxPadding)+hPadding;
-      this.daysData[dayIndex].buildRepresentation(this.representation.canvas, x);
+      this.daysData[dayIndex].buildRepresentation(this.representation, x);
     }
   }
 }
@@ -103,7 +108,7 @@ class DayData extends HasRepresentation {
   }
   draw() {
     // TODO: make this modulable/configurable
-    var text = this.representation.canvas.text((add) => {
+    var text = this.representation.text((add) => {
       add.tspan(this.dayNum)
     });
     text.font({
@@ -116,7 +121,7 @@ class DayData extends HasRepresentation {
     text.cx((daySize/2)+(text.length()/2));
     text.cy((daySize/2)+(vPadding-1))
     if(this.isSunday){
-      var circle = this.representation.canvas.circle("20px");
+      var circle = this.representation.circle("20px");
       circle.fill({color: '#DEDEDE'});
       text.fill({color: '#000'});
       circle.cx(daySize/2);
@@ -144,7 +149,7 @@ class DataGroup extends HasRepresentation {
       let y = i*(daySize + (2*vPadding));
       //TODO: instead of "22", we should have the exact value computed.
       let block = new this.blockType(slice, (this.maxDays ? this.maxDays : 22));
-      block.buildRepresentation(this.representation.canvas, 0, y);
+      block.buildRepresentation(this.representation, 0, y);
       //TODO: make sure that everywhere, it's always the parent that controls the canvas' position
       //store all the MonthBlocks associated with a given MonthGroup
       this.blocks.push(block);
@@ -183,7 +188,7 @@ class DataBlock extends HasRepresentation {
   draw() {
     let width = (daySize+interBoxPadding)*this.width + (2*hPadding);
     let height = monthBlockSize*(daySize + (2*vPadding));
-    var rect = this.representation.canvas.rect(width, height);
+    var rect = this.representation.rect(width, height);
     //TODO: maybe leave colors as an easter egg? :)
     //const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
     //var color = items[Math.floor(Math.random()*items.length)];
@@ -196,7 +201,7 @@ class DataBlock extends HasRepresentation {
     for(let idx in this.data){
       let dataObj = this.data[idx];
       const y = ((2*vPadding)+daySize)*idx;
-      dataObj.buildRepresentation(this.representation.canvas, 0, y);
+      dataObj.buildRepresentation(this.representation, 0, y);
       //here we're not storing the representation of a given month as it's already stored in the data object
     }
   }
@@ -213,17 +218,6 @@ class YearBlock extends DataBlock {
   // An actual group of {monthBlockSize} months for several years
   constructor(data, width){
     super(data, width);
-  }
-}
-
-class RepresentationDetails {
-  // handles drawing canvas creation and positioning to enable components to draw without having to take into account their positioning in space
-  constructor(draw, x=0, y=0) {
-    this.x = x;
-    this.y = y;
-    this.canvas = draw.nested();
-    // Position canvas
-    this.canvas.attr({ x: x, y: y});
   }
 }
 
@@ -251,12 +245,12 @@ class CalendarRepresentation extends HasRepresentation {
   }
   drawYearList(xOffset, yOffset){
     //TODO: this is ambiguous. Is data all the data or just the years? find way to make this more maintainable
-    //this.data.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+    //this.data.buildRepresentation(this.representation, xOffset, yOffset);
     var yg = new YearGroup(this.data);
-    yg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+    yg.buildRepresentation(this.representation, xOffset, yOffset);
   }
   drawMonthLabels(xOffset, yOffset, maxDays, monthName){
-    var text = this.representation.canvas.text(monthName);
+    var text = this.representation.text(monthName);
     //TODO: move all those font definitions in a single method?
     text.font({
       family:   'Source Sans Pro'
@@ -274,7 +268,7 @@ class CalendarRepresentation extends HasRepresentation {
     //for (let i=0; i<2; i++) {
       //TODO is it really necessary to pass the whole data object? seems like it but double check
       var mg = new MonthGroup(monthsLabels[i], this.data);
-      mg.buildRepresentation(this.representation.canvas, xOffset, yOffset);
+      mg.buildRepresentation(this.representation, xOffset, yOffset);
       this.drawMonthLabels(xOffset, yOffset, mg.maxDays, mg.monthName);
       xOffset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
     }
@@ -284,7 +278,7 @@ class CalendarRepresentation extends HasRepresentation {
     // draw bounding box
     let width = widthOffset-0.5*calendarBorderThickness;
     let height = (period*(daySize + (2*vPadding))+calendarBorderThickness);
-    var rect = this.representation.canvas.rect(width, height);
+    var rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
     rect.attr({ x: xOffset+calendarBorderThickness, y: yOffset+calendarBorderThickness });
     rect.attr({ stroke: '#000', 'stroke-width': calendarBorderThickness});
