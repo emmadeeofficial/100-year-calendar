@@ -47,8 +47,8 @@ class YearData extends HasRepresentation {
 
     var text = this.representation.canvas.text(String(this.yearNum));
     text.font({
-      family:   'Monospace'
-      , size:     14
+      family:   'Source Sans Pro'
+      , size:     textSize
       , anchor:   'middle'
       , align: 'middle'
     });
@@ -103,18 +103,26 @@ class DayData extends HasRepresentation {
   }
   draw() {
     // TODO: make this modulable/configurable
-    const value = this.isSunday ? '•' : this.dayNum;
     var text = this.representation.canvas.text((add) => {
-      add.tspan(value)
+      add.tspan(this.dayNum)
     });
     text.font({
-      family:   'Monospace'
-      , size:     14
+      //TODO: create inherited methord for handling text styling centrally
+      family:   'Source Sans Pro'
+      , size:     textSize
       , anchor:   'middle'
       , align: 'middle'
     });
     text.cx((daySize/2)+(text.length()/2));
-    text.cy((daySize/2)+(vPadding/2))
+    text.cy((daySize/2)+(vPadding-1))
+    if(this.isSunday){
+      var circle = this.representation.canvas.circle("20px");
+      circle.fill({color: '#DEDEDE'});
+      text.fill({color: '#000'});
+      circle.cx(daySize/2);
+      circle.cy((daySize/2)+(vPadding));
+      circle.back();
+    }
   }
 }
 

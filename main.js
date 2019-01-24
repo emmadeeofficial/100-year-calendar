@@ -2,13 +2,15 @@ const daySize = 20;
 const vPadding = 2;
 const hPadding = 6;
 const interBoxPadding = 3;
+const textSize = "14px";
 // period in years
 // code doesn't handle period that are not a multiple of the monthBlockSize well
-const period = 100;
+const period = 10;
 // TODO: change monthblocksize to something clearer (eg yearblocksize)
 const monthBlockSize = 10;
 const calendarBorderThickness = 2;
-const monthsLabels = [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}, {name: "March", maxDays: 31}, {name: "April", maxDays: 30}, {name: "May", maxDays: 31}, {name: "June", maxDays: 30}, {name: "July", maxDays: 31}, {name: "August", maxDays: 31}, {name: "September", maxDays: 30}, {name: "October", maxDays: 31}, {name: "November", maxDays: 30}, {name: "December", maxDays: 31}];
+//const monthsLabels = [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}, {name: "March", maxDays: 31}, {name: "April", maxDays: 30}, {name: "May", maxDays: 31}, {name: "June", maxDays: 30}, {name: "July", maxDays: 31}, {name: "August", maxDays: 31}, {name: "September", maxDays: 30}, {name: "October", maxDays: 31}, {name: "November", maxDays: 30}, {name: "December", maxDays: 31}];
+const monthsLabels = [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}];
 
 
 var startTime = Date.now();
