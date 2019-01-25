@@ -1,5 +1,5 @@
-//TODO check if class inheritance is the right thing to do here, and if so, implement, otherwise delete
 class HasRepresentation {
+  // Parent class for all objects that have a representation in the SVG document
   constructor() {
   }
   buildRepresentation(draw, x=0, y=0){
@@ -10,6 +10,14 @@ class HasRepresentation {
     // Position nested container
     this.representation.attr({ x: x, y: y});
     this.draw();
+  }
+  static styleText(text, textSize) {
+    text.font({
+      family:   'Source Sans Pro'
+      , size:     textSize
+      , anchor:   'middle'
+      , align: 'middle'
+    });
   }
 }
 
@@ -38,7 +46,8 @@ class YearData extends HasRepresentation {
     for (let month = 0; month < monthsLabels.length; month++) {
       console.log(typeof month);
       // store in dict for ease of access when dividing up months in blocks for representation
-      this.monthsData[monthsLabels[month].name] = new MonthData(this.yearNum, month+1, monthsLabels[month].name, monthsLabels[month].maxDays);
+      // The +1 serves to keep MonthData constructor style consistent with Year and Date that are both represented in human-friendyly form (so starting at 1)
+      this.monthsData[monthsLabels[month].name] = new MonthData(this.yearNum, month+1);
     }
   }
   draw() {
@@ -50,13 +59,8 @@ class YearData extends HasRepresentation {
     rect.attr({ stroke: '#000', 'stroke-width': 1});
     rect.back();
 
-    var text = this.representation.text(String(this.yearNum));
-    text.font({
-      family:   'Source Sans Pro'
-      , size:     textSize
-      , anchor:   'middle'
-      , align: 'middle'
-    });
+    var text = this.representation.text(this.yearNum.toString());
+    HasRepresentation.styleText(text, textSize);
     text.cx(Math.floor((width/2)+(text.length()/2)));
     text.cy((daySize/2)+(vPadding/2))
   }
@@ -64,12 +68,11 @@ class YearData extends HasRepresentation {
 
 class MonthData extends HasRepresentation {
   //contains data about a given month
-  constructor(yearNum, monthNum, monthName, maxDays) {
+  constructor(yearNum, monthNum) {
     super();
-    this.monthName = monthName;
-    //maxDays determines the max possible number of days in a certain month, not whether the one we're dealing with actually has this max (think of February)
-    this.maxDays = maxDays;
-    //TODO: determine whether we actually need both the name/maxdays and monthNum or if we could instead just have the index and fetch the rest from the const with all month labels
+    this.monthName = monthsLabels[monthNum-1].monthName;
+    //maxDays determines the max possible number of days in a certain month, not whether the one we're dealing with actually has this max (think of February). Having a property explicitely defined in this object allows for cleaner / easier to read code.
+    this.maxDays = monthsLabels[monthNum-1].maxDays;
     this.monthNum = monthNum;
     this.yearNum = yearNum;
     var numDays = this.maxDays
@@ -81,7 +84,6 @@ class MonthData extends HasRepresentation {
   }
   draw() {
     //draw a container rectangle for outlining
-    //TODO: the width and height are repeated for the monthblock. find a way to not repeat yourself
     let width = (daySize+interBoxPadding)*this.maxDays + (2*hPadding);
     let height = (daySize + (2*vPadding));
     var rect = this.representation.rect(width, height);
@@ -107,23 +109,19 @@ class DayData extends HasRepresentation {
     this.isSunday = moment().month(this.monthNum-1).date(this.dayNum).year(yearNum).day() == 0;
   }
   draw() {
-    // TODO: make this modulable/configurable
-    var text = this.representation.text((add) => {
-      add.tspan(this.dayNum)
-    });
-    text.font({
-      //TODO: create inherited methord for handling text styling centrally
-      family:   'Source Sans Pro'
-      , size:     textSize
-      , anchor:   'middle'
-      , align: 'middle'
-    });
+    this.drawText();
+    this.drawShapes();
+  }
+  drawText() {
+    var text = this.representation.text(this.dayNum.toString());
+    HasRepresentation.styleText(text, textSize);
     text.cx((daySize/2)+(text.length()/2));
-    text.cy((daySize/2)+(vPadding-1))
+    text.cy((daySize/2)+(vPadding-1));
+  }
+  drawShapes() {
     if(this.isSunday){
       var circle = this.representation.circle("20px");
       circle.fill({color: '#DEDEDE'});
-      text.fill({color: '#000'});
       circle.cx(daySize/2);
       circle.cy((daySize/2)+(vPadding));
       circle.back();
@@ -147,10 +145,9 @@ class DataGroup extends HasRepresentation {
     for(let i=0; i<period; i=i+monthBlockSize){
       let slice = this.data.slice(i, i+monthBlockSize);
       let y = i*(daySize + (2*vPadding));
-      //TODO: instead of "22", we should have the exact value computed.
-      let block = new this.blockType(slice, (this.maxDays ? this.maxDays : 22));
+      //TODO: instead of "22", we should have the exact value computed. -- will be fixed when refactoring grid system
+      let block = new this.blockType(slice, (this.maxDays ? this.maxDays : 25));
       block.buildRepresentation(this.representation, 0, y);
-      //TODO: make sure that everywhere, it's always the parent that controls the canvas' position
       //store all the MonthBlocks associated with a given MonthGroup
       this.blocks.push(block);
     }
@@ -163,7 +160,6 @@ class MonthGroup extends DataGroup {
   //fetch all month objects from the data object
     var data = dataObj.yearsData.map(year => year.monthsData[monthLabel.name]);
     super(data, MonthBlock);
-    //TODO: have monthsData refer to the index in the monthLabels consnt?
     this.monthName = monthLabel.name;
     this.maxDays = monthLabel.maxDays;
   }
@@ -230,34 +226,21 @@ class CalendarRepresentation extends HasRepresentation {
   }
   draw() {
     //hacky use of calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
-    //TODO: fix confusing variable names here
-    var xOffset = this.xOffset + calendarBorderThickness*1.5;
-    //TODO: change this hard coded "40" that allows for month labels into something cleaner
-    var yOffset = this.yOffset + 40 + calendarBorderThickness*1.5;
-    //width of calendar is calculated as result of drawing drawMonthgroups
-    //TODO: SINCE MAXDAYS IS A CONSTANT, THIS SHOULD BE DONE WITHOUT HAVING TO RETURN VALUE FROM drawMonthGroups
-    this.drawYearList(xOffset, yOffset);
+    var currentXOffset = this.xOffset + calendarBorderThickness*1.5;
+    var yOffset = this.yOffset + textSize*3 + calendarBorderThickness*1.5;
+    this.drawYearList(currentXOffset, yOffset);
     var yearListWidth = 2*(hPadding+daySize);
-    xOffset += yearListWidth;
-    xOffset = this.drawMonthGroups(xOffset, yOffset);
-    // TODO: cleanup var names. the use of this.xOffset and xOffset is confusing
-    this.drawCalendarBorder(this.xOffset, this.yOffset + 40, xOffset-this.xOffset);
+    currentXOffset += yearListWidth;
+    currentXOffset = this.drawMonthGroups(currentXOffset, yOffset);
+    this.drawCalendarBorder(this.xOffset, this.yOffset + textSize*3, currentXOffset-this.xOffset);
   }
   drawYearList(xOffset, yOffset){
-    //TODO: this is ambiguous. Is data all the data or just the years? find way to make this more maintainable
-    //this.data.buildRepresentation(this.representation, xOffset, yOffset);
     var yg = new YearGroup(this.data);
     yg.buildRepresentation(this.representation, xOffset, yOffset);
   }
   drawMonthLabels(xOffset, yOffset, maxDays, monthName){
     var text = this.representation.text(monthName);
-    //TODO: move all those font definitions in a single method?
-    text.font({
-      family:   'Source Sans Pro'
-      , size:     12
-      , anchor:   'middle'
-      , align: 'middle'
-    });
+    HasRepresentation.styleText(text, textSize*0.8);
     text.cx(((maxDays*(daySize+interBoxPadding)+2*hPadding)/2 + xOffset)
     + (text.length()/2));
     text.cy(45)
@@ -265,8 +248,6 @@ class CalendarRepresentation extends HasRepresentation {
   drawMonthGroups(xOffset, yOffset) {
     //draw months
     for (let i=0; i<monthsLabels.length; i++) {
-    //for (let i=0; i<2; i++) {
-      //TODO is it really necessary to pass the whole data object? seems like it but double check
       var mg = new MonthGroup(monthsLabels[i], this.data);
       mg.buildRepresentation(this.representation, xOffset, yOffset);
       this.drawMonthLabels(xOffset, yOffset, mg.maxDays, mg.monthName);
