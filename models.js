@@ -9,7 +9,7 @@ class HasRepresentation {
     this.representation = draw.nested();
     // Position nested container
     this.representation.attr({ x: x, y: y});
-    this.draw();
+    return this.draw();
   }
   static styleText(text, textSize) {
     text.font({
@@ -26,13 +26,13 @@ class AllYearsData extends HasRepresentation {
   constructor(startYear) {
     super();
     this.startYear = startYear;
-    this.yearsData = Array.from(new Array(period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
+    this.yearsData = Array.from(new Array(config.period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
   }
   draw() {
     var yOffset = 0;
     for (let i=0; i<this.yearsData.length; i++) {
       this.yearsData[i].buildRepresentation(this.representation, 0, yOffset)
-      yOffset += (daySize + (2*vPadding));
+      yOffset += (config.daySize + (2*config.vPadding));
     }
   }
 }
@@ -43,16 +43,16 @@ class YearData extends HasRepresentation {
     super();
     this.yearNum = yearNum;
     this.monthsData = {}
-    for (let month = 0; month < monthsLabels.length; month++) {
+    for (let month = 0; month < config.monthsLabels.length; month++) {
       console.log(typeof month);
       // store in dict for ease of access when dividing up months in blocks for representation
       // The +1 serves to keep MonthData constructor style consistent with Year and Date that are both represented in human-friendyly form (so starting at 1)
-      this.monthsData[monthsLabels[month].name] = new MonthData(this.yearNum, month+1);
+      this.monthsData[config.monthsLabels[month].name] = new MonthData(this.yearNum, month+1);
     }
   }
   draw() {
-    let width = 2*(hPadding+daySize);
-    let height = (daySize + (2*vPadding));
+    let width = 2*(config.hPadding+config.daySize);
+    let height = (config.daySize + (2*config.vPadding));
     var rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
     rect.attr({ x: 0, y: 0 });
@@ -60,9 +60,9 @@ class YearData extends HasRepresentation {
     rect.back();
 
     var text = this.representation.text(this.yearNum.toString());
-    HasRepresentation.styleText(text, textSize);
+    HasRepresentation.styleText(text, config.textSize);
     text.cx(Math.floor((width/2)+(text.length()/2)));
-    text.cy((daySize/2)+(vPadding/2))
+    text.cy((config.daySize/2)+(config.vPadding/2))
   }
 }
 
@@ -70,9 +70,9 @@ class MonthData extends HasRepresentation {
   //contains data about a given month
   constructor(yearNum, monthNum) {
     super();
-    this.monthName = monthsLabels[monthNum-1].monthName;
+    this.monthName = config.monthsLabels[monthNum-1].monthName;
     //maxDays determines the max possible number of days in a certain month, not whether the one we're dealing with actually has this max (think of February). Having a property explicitely defined in this object allows for cleaner / easier to read code.
-    this.maxDays = monthsLabels[monthNum-1].maxDays;
+    this.maxDays = config.monthsLabels[monthNum-1].maxDays;
     this.monthNum = monthNum;
     this.yearNum = yearNum;
     var numDays = this.maxDays
@@ -84,15 +84,15 @@ class MonthData extends HasRepresentation {
   }
   draw() {
     //draw a container rectangle for outlining
-    let width = (daySize+interBoxPadding)*this.maxDays + (2*hPadding);
-    let height = (daySize + (2*vPadding));
+    let width = (config.daySize+config.interBoxPadding)*this.maxDays + (2*config.hPadding);
+    let height = (config.daySize + (2*config.vPadding));
     var rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
     rect.attr({ x: 0, y: 0 });
     rect.attr({ stroke: '#000', 'stroke-width': 1});
     rect.back();
     for(let dayIndex in this.daysData){
-      const x = dayIndex*(daySize+interBoxPadding)+hPadding;
+      const x = dayIndex*(config.daySize+config.interBoxPadding)+config.hPadding;
       this.daysData[dayIndex].buildRepresentation(this.representation, x);
     }
   }
@@ -114,16 +114,16 @@ class DayData extends HasRepresentation {
   }
   drawText() {
     var text = this.representation.text(this.dayNum.toString());
-    HasRepresentation.styleText(text, textSize);
-    text.cx((daySize/2)+(text.length()/2));
-    text.cy((daySize/2)+(vPadding-1));
+    HasRepresentation.styleText(text, config.textSize);
+    text.cx((config.daySize/2)+(text.length()/2));
+    text.cy((config.daySize/2)+(config.vPadding-1));
   }
   drawShapes() {
     if(this.isSunday){
       var circle = this.representation.circle("20px");
       circle.fill({color: '#DEDEDE'});
-      circle.cx(daySize/2);
-      circle.cy((daySize/2)+(vPadding));
+      circle.cx(config.daySize/2);
+      circle.cy((config.daySize/2)+(config.vPadding));
       circle.back();
     }
   }
@@ -142,9 +142,9 @@ class DataGroup extends HasRepresentation {
   }
   draw() {
     // Group year and create respective blocks
-    for(let i=0; i<period; i=i+monthBlockSize){
-      let slice = this.data.slice(i, i+monthBlockSize);
-      let y = i*(daySize + (2*vPadding));
+    for(let i=0; i<config.period; i=i+config.monthBlockSize){
+      let slice = this.data.slice(i, i+config.monthBlockSize);
+      let y = i*(config.daySize + (2*config.vPadding));
       //TODO: instead of "22", we should have the exact value computed. -- will be fixed when refactoring grid system
       let block = new this.blockType(slice, (this.maxDays ? this.maxDays : 25));
       block.buildRepresentation(this.representation, 0, y);
@@ -174,7 +174,7 @@ class YearGroup extends DataGroup {
 }
 
 class DataBlock extends HasRepresentation {
-  // An actual group of {monthBlockSize} months for several years
+  // An actual group of {config.monthBlockSize} months for several years
   constructor(data, width){
     super();
     this.data = data;
@@ -182,8 +182,8 @@ class DataBlock extends HasRepresentation {
     this.width = width;
   }
   draw() {
-    let width = (daySize+interBoxPadding)*this.width + (2*hPadding);
-    let height = monthBlockSize*(daySize + (2*vPadding));
+    let width = (config.daySize+config.interBoxPadding)*this.width + (2*config.hPadding);
+    let height = config.monthBlockSize*(config.daySize + (2*config.vPadding));
     var rect = this.representation.rect(width, height);
     //TODO: maybe leave colors as an easter egg? :)
     //const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
@@ -196,7 +196,7 @@ class DataBlock extends HasRepresentation {
     // represent months
     for(let idx in this.data){
       let dataObj = this.data[idx];
-      const y = ((2*vPadding)+daySize)*idx;
+      const y = ((2*config.vPadding)+config.daySize)*idx;
       dataObj.buildRepresentation(this.representation, 0, y);
       //here we're not storing the representation of a given month as it's already stored in the data object
     }
@@ -204,14 +204,14 @@ class DataBlock extends HasRepresentation {
 }
 
 class MonthBlock extends DataBlock {
-  // An actual group of {monthBlockSize} months for several years
+  // An actual group of {config.monthBlockSize} months for several years
   constructor(data, width){
     super(data, width);
   }
 }
 
 class YearBlock extends DataBlock {
-  // An actual group of {monthBlockSize} months for several years
+  // An actual group of {config.monthBlockSize} months for several years
   constructor(data, width){
     super(data, width);
   }
@@ -225,14 +225,16 @@ class CalendarRepresentation extends HasRepresentation {
     this.yOffset = yOffset;
   }
   draw() {
-    //hacky use of calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
-    var currentXOffset = this.xOffset + calendarBorderThickness*1.5;
-    var yOffset = this.yOffset + textSize*3 + calendarBorderThickness*1.5;
+    //hacky use of config.calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
+    //TODO clean up this code
+    var currentXOffset = this.xOffset + config.calendarBorderThickness*1.5;
+    var yOffset = this.yOffset + config.textSize*3 + config.calendarBorderThickness*1.5;
     this.drawYearList(currentXOffset, yOffset);
-    var yearListWidth = 2*(hPadding+daySize);
+    var yearListWidth = 2*(config.hPadding+config.daySize);
     currentXOffset += yearListWidth;
     currentXOffset = this.drawMonthGroups(currentXOffset, yOffset);
-    this.drawCalendarBorder(this.xOffset, this.yOffset + textSize*3, currentXOffset-this.xOffset);
+    var currentYOffset = this.drawCalendarBorder(this.xOffset, this.yOffset + config.textSize*3, currentXOffset-this.xOffset) + 2*(this.yOffset + config.textSize*3);
+    return {y: currentYOffset, x: currentXOffset + this.xOffset + config.calendarBorderThickness*1.5}
   }
   drawYearList(xOffset, yOffset){
     var yg = new YearGroup(this.data);
@@ -240,29 +242,42 @@ class CalendarRepresentation extends HasRepresentation {
   }
   drawMonthLabels(xOffset, yOffset, maxDays, monthName){
     var text = this.representation.text(monthName);
-    HasRepresentation.styleText(text, textSize*0.8);
-    text.cx(((maxDays*(daySize+interBoxPadding)+2*hPadding)/2 + xOffset)
+    HasRepresentation.styleText(text, config.textSize*0.8);
+    text.cx(((maxDays*(config.daySize+config.interBoxPadding)+2*config.hPadding)/2 + xOffset)
     + (text.length()/2));
     text.cy(45)
   }
   drawMonthGroups(xOffset, yOffset) {
     //draw months
-    for (let i=0; i<monthsLabels.length; i++) {
-      var mg = new MonthGroup(monthsLabels[i], this.data);
+    for (let i=0; i<config.monthsLabels.length; i++) {
+      var mg = new MonthGroup(config.monthsLabels[i], this.data);
       mg.buildRepresentation(this.representation, xOffset, yOffset);
       this.drawMonthLabels(xOffset, yOffset, mg.maxDays, mg.monthName);
-      xOffset += (2*hPadding + (mg.maxDays*(daySize+interBoxPadding)));
+      xOffset += (2*config.hPadding + (mg.maxDays*(config.daySize+config.interBoxPadding)));
     }
     return xOffset;
   }
   drawCalendarBorder(xOffset, yOffset, widthOffset) {
     // draw bounding box
-    let width = widthOffset-0.5*calendarBorderThickness;
-    let height = (period*(daySize + (2*vPadding))+calendarBorderThickness);
+    let width = widthOffset-0.5*config.calendarBorderThickness;
+    let height = (config.period*(config.daySize + (2*config.vPadding))+config.calendarBorderThickness);
     var rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
-    rect.attr({ x: xOffset+calendarBorderThickness, y: yOffset+calendarBorderThickness });
-    rect.attr({ stroke: '#000', 'stroke-width': calendarBorderThickness});
+    rect.attr({ x: xOffset+config.calendarBorderThickness, y: yOffset+config.calendarBorderThickness });
+    rect.attr({ stroke: '#000', 'stroke-width': config.calendarBorderThickness});
     rect.front();
+    return height;
   }
+}
+
+function generateCalendar(startYear) {
+  var startTime = Date.now();
+  var data = new AllYearsData(startYear);
+  //TODO: generate canvas size dynamically
+  var masterDraw = SVG('drawing').size(1, 1);
+  var calendarRepresentation = new CalendarRepresentation(data, xOffset=30, yOffset=20);
+  let {x, y} = calendarRepresentation.buildRepresentation(masterDraw);
+  masterDraw.size(x, y);
+  console.log("Execution took " + (Date.now() - startTime) + " ms");
+  //console.log(masterDraw.svg())
 }
