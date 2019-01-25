@@ -243,16 +243,18 @@ class CalendarRepresentation extends HasRepresentation {
     this.yOffset = yOffset;
   }
   draw() {
-    //hacky use of config.calendarBorderThickness to accomodate the fact that svg draws border partially inside the element on which the border is drawn
+    //hacky use of config.calendarBorderThickness to accommodate the fact that svg draws border partially inside the element on which the border is drawn
     //TODO clean up this code
-    let currentXOffset = this.xOffset + config.calendarBorderThickness*1.5;
-    let yOffset = this.yOffset + config.textSize*3 + config.calendarBorderThickness*1.5;
-    this.drawYearList(currentXOffset, yOffset);
+    let drawingxOffset = this.xOffset + config.calendarBorderThickness*1.5;
+    let drawingyOffset = this.yOffset + config.textSize*3 + config.calendarBorderThickness*1.5;
+    this.drawYearList(drawingxOffset, drawingyOffset);
     let yearListWidth = 2*(config.hPadding+config.daySize);
-    currentXOffset += yearListWidth;
-    currentXOffset = this.drawMonthGroups(currentXOffset, yOffset);
-    let currentYOffset = this.drawCalendarBorder(this.xOffset, this.yOffset + config.textSize*3, currentXOffset-this.xOffset) + 2*(this.yOffset + config.textSize*3);
-    return {y: currentYOffset, x: currentXOffset + this.xOffset + config.calendarBorderThickness*1.5}
+    drawingxOffset += yearListWidth;
+    drawingxOffset = this.drawMonthGroups(drawingxOffset, drawingyOffset);
+    console.log(drawingyOffset);
+    //TODO: cleanup this currentYOffset thing
+    let currentYOffset = this.drawCalendarBorder(this.xOffset, this.yOffset + config.textSize*3, drawingxOffset-this.xOffset) + 2*drawingyOffset;
+    return {y: currentYOffset, x: drawingxOffset + this.xOffset + config.calendarBorderThickness*1.5}
   }
   drawYearList(xOffset, yOffset){
     let yg = new YearGroup(this.data);
@@ -275,10 +277,10 @@ class CalendarRepresentation extends HasRepresentation {
     }
     return xOffset;
   }
-  drawCalendarBorder(xOffset, yOffset, widthOffset) {
+  drawCalendarBorder(xOffset, yOffset, width) {
     // draw bounding box
-    let width = widthOffset-0.5*config.calendarBorderThickness;
     let height = (config.period*(config.daySize + (2*config.vPadding))+config.calendarBorderThickness);
+    width -= 0.5*config.calendarBorderThickness;
     let rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
     rect.attr({ x: xOffset+config.calendarBorderThickness, y: yOffset+config.calendarBorderThickness });
