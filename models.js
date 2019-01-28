@@ -29,7 +29,7 @@ class AllData extends HasRepresentation {
   constructor(startYear) {
     super();
     this.startYear = startYear;
-    this.yearsData = Array.from(new Array(config.period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
+    this.yearsData = Array.from(new Array(config.data.period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
   }
 }
 
@@ -38,10 +38,10 @@ class YearData extends HasRepresentation {
     super();
     this.yearNum = yearNum;
     this.monthsData = {};
-    for (let month = 0; month < config.monthsLabels.length; month++) {
+    for (let month = 0; month < config.data.monthsLabels.length; month++) {
       // store in dict for ease of access when dividing up months in blocks for representation
       // The +1 serves to keep MonthData constructor style consistent with Year and Date that are both represented in human-friendyly form (so starting at 1)
-      this.monthsData[config.monthsLabels[month].name] = new MonthData(this.yearNum, month+1);
+      this.monthsData[config.data.monthsLabels[month].name] = new MonthData(this.yearNum, month+1);
     }
   }
   draw() {
@@ -51,15 +51,15 @@ class YearData extends HasRepresentation {
   drawText() {
     let yearNumString = this.yearNum.toString();
     let text = this.representation.text(yearNumString);
-    HasRepresentation.styleText(text, config.textSize);
-    text.x(config.yearCellWidth/2)
+    HasRepresentation.styleText(text, config.styling.textSize);
+    text.x(config.styling.yearCellWidth/2)
     //  - 1 is hacky adjustment
-    text.cy((config.cellHeight/2) - 1);
+    text.cy((config.styling.cellHeight/2) - 1);
   }
   drawShapes() {
-    let rect = this.representation.rect(config.yearCellWidth, config.cellHeight);
+    let rect = this.representation.rect(config.styling.yearCellWidth, config.styling.cellHeight);
     rect.fill({ opacity: 0 });
-    rect.attr({ stroke: '#000', 'stroke-width': config.innerCellWidth});
+    rect.attr({ stroke: '#000', 'stroke-width': config.styling.innerCellBorderThickness});
   }
 }
 
@@ -68,7 +68,7 @@ class MonthData extends HasRepresentation {
   constructor(yearNum, monthNum) {
     super();
     let monthIndex = monthNum - 1;
-    let monthLabel = config.monthsLabels[monthIndex];
+    let monthLabel = config.data.monthsLabels[monthIndex];
     let numDays;
     this.monthName = monthLabel.monthName;
     //maxDays determines the max possible number of days in a certain month, not whether the one we're dealing with actually has this max (think of February). Having a property explicitely defined in this object allows for cleaner / easier to read code.
@@ -80,7 +80,6 @@ class MonthData extends HasRepresentation {
       // we use a moment.js abstraction to obtain the actual number of days of the month and directly generate the right number of DayData object, instead of having the 29th day of february having to hide itself on non leap year. Moreover, we decrease the "human" month num by one as moment.js indexes month starting at 0
       numDays = moment().month(monthIndex).year(yearNum).daysInMonth();
     }
-    // TODO: is this a good place for a generator?
     this.daysData = Array.from(new Array(numDays), (x,i) => i+1).map(dayNum => new DayData(this.yearNum, this.monthNum, dayNum));
   }
   draw() {
@@ -89,17 +88,17 @@ class MonthData extends HasRepresentation {
   }
   drawShapes() {
     //draw a container rectangle for outlining
-    let width = (config.daySize * this.maxDays ) + (config.interBoxPadding * ( this.maxDays - 1)) + (2 * config.hPadding);
-    let rect = this.representation.rect(width, config.cellHeight);
+    let width = (config.styling.daySize * this.maxDays ) + (config.styling.interBoxPadding * ( this.maxDays - 1)) + (2 * config.styling.hPadding);
+    let rect = this.representation.rect(width, config.styling.cellHeight);
     rect.fill({ opacity: 0 });
-    rect.attr({ stroke: '#000', 'stroke-width': config.innerCellWidth});
+    rect.attr({ stroke: '#000', 'stroke-width': config.styling.innerCellBorderThickness});
   }
   drawDays() {
-    let xOffset = config.hPadding;
+    let xOffset = config.styling.hPadding;
     for(let i=0; i<this.daysData.length; i++){
       this.daysData[i].buildRepresentation(this.representation, xOffset);
-      // no need to adjust for last day's config.interBoxPadding here, since, well, it's the last
-      xOffset += config.daySize + config.interBoxPadding;
+      // no need to adjust for last day's config.styling.interBoxPadding here, since, well, it's the last
+      xOffset += config.styling.daySize + config.styling.interBoxPadding;
       // we could return the xOffset and draw the shape based on it but that seems like overcomplicating things -- the width calculation above is O(1) anyway
     }
   }
@@ -122,17 +121,17 @@ class DayData extends HasRepresentation {
   drawText() {
     let dayNumString = this.dayNum.toString();
     let text = this.representation.text(dayNumString);
-    HasRepresentation.styleText(text, config.textSize);
-    text.x(config.daySize/2)
+    HasRepresentation.styleText(text, config.styling.textSize);
+    text.x(config.styling.daySize/2)
     //  - 1 is hacky adjustment
-    text.cy((config.cellHeight/2) - 1);
+    text.cy((config.styling.cellHeight/2) - 1);
   }
   drawShapes() {
     if(this.isSunday){
-      let circle = this.representation.circle(config.textSize*1.4);
+      let circle = this.representation.circle(config.styling.textSize*1.4);
       circle.fill({color: '#DEDEDE'});
-      circle.cx(config.daySize/2);
-      circle.cy(config.cellHeight/2);
+      circle.cx(config.styling.daySize/2);
+      circle.cy(config.styling.cellHeight/2);
       circle.back();
     }
   }
@@ -151,9 +150,9 @@ class DataGroup extends HasRepresentation {
   draw() {
     // Group year and create respective blocks
     let y = 0;
-    const blockHeight = config.monthBlockSize*(config.cellHeight)+config.innerGridThickness;
-    for(let i=0; i*config.monthBlockSize<config.period; i++){
-      let slice = this.data.slice(i*config.monthBlockSize, (i+1)*config.monthBlockSize);
+    const blockHeight = config.styling.monthBlockSize*(config.styling.cellHeight)+config.styling.innerGridBorderThickness;
+    for(let i=0; i*config.styling.monthBlockSize<config.data.period; i++){
+      let slice = this.data.slice(i*config.styling.monthBlockSize, (i+1)*config.styling.monthBlockSize);
       let block = new DataBlock(slice, this.width, blockHeight);
       block.buildRepresentation(this.representation, 0, y);
       this.blocks.push(block);
@@ -180,15 +179,15 @@ class DataBlock extends HasRepresentation {
     /*const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
     let color = items[Math.floor(Math.random()*items.length)];
     rect.attr({ fill: color });*/
-    rect.attr({ stroke: '#000', 'stroke-width': config.innerGridThickness});
+    rect.attr({ stroke: '#000', 'stroke-width': config.styling.innerGridBorderThickness});
   }
   drawItems() {
     // represent items
-    let y = config.innerGridThickness/2;
-    let x = config.innerGridThickness/2;
+    let y = config.styling.innerGridBorderThickness/2;
+    let x = config.styling.innerGridBorderThickness/2;
     for(let i=0; i<this.data.length; i++){
       this.data[i].buildRepresentation(this.representation, x, y);
-      y += (config.cellHeight);
+      y += (config.styling.cellHeight);
     }
   }
 }
@@ -201,9 +200,9 @@ class CalendarRepresentation extends HasRepresentation {
     this.yOffset = yOffset;
   }
   draw() {
-    //hacky use of config.calendarBorderThickness to accommodate the fact that svg draws border partially inside the element on which the border is drawn
+    //hacky use of config.styling.calendarBorderThickness to accommodate the fact that svg draws border partially inside the element on which the border is drawn
     // each sub draw() function returns the variable component's width or height that it is responsible for handling. This in turns enables us to properly resize the canvas.
-    let yOffsetWithLabels = this.yOffset + config.monthLabelsHeight;
+    let yOffsetWithLabels = this.yOffset + config.styling.monthLabelsHeight;
     let yearListWidth;
     let monthGroupsWidth;
     let gridHeight;
@@ -213,29 +212,29 @@ class CalendarRepresentation extends HasRepresentation {
     monthGroupsWidth = this.drawMonthGroups(this.xOffset + yearListWidth, yOffsetWithLabels);
     // remove the doubly accounted this.xOffset. This could obviously be cleaned up, eventually
     gridHeight = this.drawCalendarBorder(this.xOffset, yOffsetWithLabels, this.xOffset);
-    canvasHeight = config.monthLabelsHeight + gridHeight + 2*config.calendarBorderThickness + 2*this.yOffset;
-    canvasWidth = yearListWidth + monthGroupsWidth + 2*config.calendarBorderThickness + 2*this.xOffset;
+    canvasHeight = config.styling.monthLabelsHeight + gridHeight + 2*config.styling.calendarBorderThickness + 2*this.yOffset;
+    canvasWidth = yearListWidth + monthGroupsWidth + 2*config.styling.calendarBorderThickness + 2*this.xOffset;
     return {width: canvasWidth, height: canvasHeight}
   }
   drawYearList(xOffset, yOffset){
-    let width = config.yearCellWidth + config.innerGridThickness;
+    let width = config.styling.yearCellWidth + config.styling.innerGridBorderThickness;
     let yearDataGroup = new DataGroup(this.data.yearsData, width);
     yearDataGroup.buildRepresentation(this.representation, xOffset, yOffset);
     return width;
   }
   drawMonthLabel(xOffset, monthGroupWidth, maxDays, monthName){
     let text = this.representation.text(monthName);
-    HasRepresentation.styleText(text, config.textSize*0.8);
+    HasRepresentation.styleText(text, config.styling.textSize*0.8);
     text.cx((monthGroupWidth+text.length())/2 + xOffset);
-    text.y(config.monthLabelsHeight);
+    text.y(config.styling.monthLabelsHeight);
   }
   drawMonthGroups(xOffset, yOffset) {
     //draw months
     let monthGroupsWidth = 0;
-    for (let i=0; i<config.monthsLabels.length; i++) {
-      let monthLabel = config.monthsLabels[i];
+    for (let i=0; i<config.data.monthsLabels.length; i++) {
+      let monthLabel = config.data.monthsLabels[i];
       let data = this.data.yearsData.map(year => year.monthsData[monthLabel.name]);
-      let width = (config.daySize*monthLabel.maxDays) + (config.interBoxPadding*(monthLabel.maxDays-1)) + (2*config.hPadding) + (config.innerGridThickness);
+      let width = (config.styling.daySize*monthLabel.maxDays) + (config.styling.interBoxPadding*(monthLabel.maxDays-1)) + (2*config.styling.hPadding) + (config.styling.innerGridBorderThickness);
       let monthDataGroup = new DataGroup(data, width);
       let groupOffset = xOffset + monthGroupsWidth;
       monthDataGroup.buildRepresentation(this.representation, groupOffset, yOffset);
@@ -246,13 +245,13 @@ class CalendarRepresentation extends HasRepresentation {
   }
   drawCalendarBorder(xOffset, yOffset, width) {
     // draw bounding box
-    let height = (config.period*(config.cellHeight)+config.calendarBorderThickness);
+    let height = (config.data.period*(config.styling.cellHeight)+config.styling.calendarBorderThickness);
     let rect;
-    width -= 0.5*config.calendarBorderThickness;
+    width -= 0.5*config.styling.calendarBorderThickness;
     rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
-    rect.attr({ x: xOffset+config.calendarBorderThickness, y: yOffset+config.calendarBorderThickness });
-    rect.attr({ stroke: '#000', 'stroke-width': config.calendarBorderThickness});
+    rect.attr({ x: xOffset+config.styling.calendarBorderThickness, y: yOffset+config.styling.calendarBorderThickness });
+    rect.attr({ stroke: '#000', 'stroke-width': config.styling.calendarBorderThickness});
     return height;
   }
 }
@@ -261,7 +260,7 @@ function generateCalendar(startYear) {
   let startTime = Date.now();
   let data = new AllData(startYear);
   let masterDraw = SVG('drawing').size(1, 1);
-  let calendarRepresentation = new CalendarRepresentation(data, xOffset=config.xBleed, yOffset=config.yBleed);
+  let calendarRepresentation = new CalendarRepresentation(data, xOffset=config.styling.xBleed, yOffset=config.styling.yBleed);
   let {width, height} = calendarRepresentation.buildRepresentation(masterDraw);
   masterDraw.size(width, height);
   console.log("Execution took " + (Date.now() - startTime) + " ms");
