@@ -31,13 +31,6 @@ class AllData extends HasRepresentation {
     this.startYear = startYear;
     this.yearsData = Array.from(new Array(config.period), (x,i) => this.startYear+i).map(yearNum => new YearData(yearNum));
   }
-  draw() {
-    let yOffset = 0;
-    for (let i=0; i<this.yearsData.length; i++) {
-      this.yearsData[i].buildRepresentation(this.representation, 0, yOffset)
-      yOffset += (config.cellHeight);
-    }
-  }
 }
 
 class YearData extends HasRepresentation {
@@ -107,7 +100,7 @@ class MonthData extends HasRepresentation {
       this.daysData[i].buildRepresentation(this.representation, xOffset);
       // no need to adjust for last day's config.interBoxPadding here, since, well, it's the last
       xOffset += config.daySize + config.interBoxPadding;
-      // we could return the xOffset and draw the shape based on it but that seems like overcomplicating thing -- the width calculation above is O(1) anyway
+      // we could return the xOffset and draw the shape based on it but that seems like overcomplicating things -- the width calculation above is O(1) anyway
     }
   }
 }
@@ -170,7 +163,6 @@ class DataGroup extends HasRepresentation {
 }
 
 class DataBlock extends HasRepresentation {
-  // An actual group of {config.monthBlockSize} months or years for several years
   constructor(data, width, height){
     super();
     this.data = data;
