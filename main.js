@@ -7,12 +7,16 @@ const config = {
   textSize: "14",
 // period in years
 // code doesn't handle period that are not a multiple of the monthBlockSize well
-  period: 10,
+  period: 40,
 // TODO: change monthblocksize to something clearer (eg yearblocksize)
   monthBlockSize: 10,
-  calendarBorderThickness: 2,
+  calendarBorderThickness: 0,
+  innerGridThickness: 6,
 //  monthsLabels: [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}, {name: "March", maxDays: 31}, {name: "April", maxDays: 30}, {name: "May", maxDays: 31}, {name: "June", maxDays: 30}, {name: "July", maxDays: 31}, {name: "August", maxDays: 31}, {name: "September", maxDays: 30}, {name: "October", maxDays: 31}, {name: "November", maxDays: 30}, {name: "December", maxDays: 31}],
-  monthsLabels: [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}],
+  monthsLabels: [{name: "January", maxDays: 31}, {name: "February", maxDays: 29}, {name: "March", maxDays: 31}],
+  get yearCellWidth () {
+    return 2*(this.hPadding+this.daySize);
+  }
 };
 
 generateCalendar(config.startYear);

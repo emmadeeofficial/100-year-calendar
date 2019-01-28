@@ -52,7 +52,7 @@ class YearData extends HasRepresentation {
     }
   }
   draw() {
-    let cellWidth = 2*(config.hPadding+config.daySize);
+    let cellWidth = config.yearCellWidth;
     let cellHeight = (config.daySize + (2*config.vPadding));
     this.drawText(cellWidth);
     this.drawShapes(cellWidth, cellHeight);
@@ -98,7 +98,7 @@ class MonthData extends HasRepresentation {
   }
   drawShapes() {
     //draw a container rectangle for outlining
-    let width = (config.daySize+config.interBoxPadding)*this.maxDays + (2*config.hPadding);
+    let width = (config.daySize)*this.maxDays + config.interBoxPadding*(this.maxDays-1) + (2*config.hPadding);
     let height = config.daySize + (2*config.vPadding);
     let rect = this.representation.rect(width, height);
     rect.fill({ opacity: 0 });
@@ -108,9 +108,10 @@ class MonthData extends HasRepresentation {
   }
   drawDays() {
     let xOffset = config.hPadding;
-    for(let dayIndex in this.daysData){
-      this.daysData[dayIndex].buildRepresentation(this.representation, xOffset);
-      xOffset += (config.daySize + config.interBoxPadding);
+    for(let i=0; i<this.daysData.length; i++){
+      this.daysData[i].buildRepresentation(this.representation, xOffset);
+      // no need to adjust for last day's config.interBoxPadding here, since, well, it's the last
+      xOffset += config.daySize + config.interBoxPadding;
     }
   }
 }
@@ -138,7 +139,7 @@ class DayData extends HasRepresentation {
   }
   drawShapes() {
     if(this.isSunday){
-      let circle = this.representation.circle("20px");
+      let circle = this.representation.circle(config.textSize*1.4);
       circle.fill({color: '#DEDEDE'});
       circle.cx(config.daySize/2);
       circle.cy((config.daySize/2)+(config.vPadding));
@@ -151,57 +152,50 @@ class DayData extends HasRepresentation {
 class DataGroup extends HasRepresentation {
   // In the classic On Kawara version of this calendar, months are grouped by decades of a single month in the representation (i.e.: January 1900 -> January 1909)
   // This is done primarily for typesetting purposes. It creates a complexity however: the month's visual representation (as part of a decade) is distinct from its logical representation (as part of a year). This class and its child classes makes the bridge between the two
-  constructor(data, blockType) {
+  constructor(data, width) {
     super();
-    //fetch all year objects from the data object
     this.data = data;
-    this.blocks = []; // initially no representation
-    this.blockType = blockType;
+    this.width = width;
+    this.blocks = [];
   }
   draw() {
     // Group year and create respective blocks
-    for(let i=0; i<config.period; i=i+config.monthBlockSize){
-      let slice = this.data.slice(i, i+config.monthBlockSize);
-      let y = i*(config.daySize + (2*config.vPadding));
-      //TODO: instead of "22", we should have the exact value computed. -- will be fixed when refactoring grid system
-      let block = new this.blockType(slice, (this.maxDays ? this.maxDays : 25));
+    let y = 0;
+    for(let i=0; i*config.monthBlockSize<config.period; i++){
+      let slice = this.data.slice(i*config.monthBlockSize, (i+1)*config.monthBlockSize);
+      //TODO: instead of "25", we should have the exact value computed. -- will be fixed when refactoring grid system
+      let block = new DataBlock(slice, this.width);
       block.buildRepresentation(this.representation, 0, y);
       //store all the MonthBlocks associated with a given MonthGroup
       this.blocks.push(block);
+      // TODO: fix ? Repeat of height calculation below
+      y += config.monthBlockSize*(config.daySize + (2*config.vPadding))+config.innerGridThickness;
     }
   }
 }
 
-
-class MonthGroup extends DataGroup {
-  constructor(monthLabel, dataObj) {
-  //fetch all month objects from the data object
-    let data = dataObj.yearsData.map(year => year.monthsData[monthLabel.name]);
-    super(data, MonthBlock);
-    this.monthName = monthLabel.name;
-    this.maxDays = monthLabel.maxDays;
-  }
-}
-
-class YearGroup extends DataGroup {
-  // Equivalent of MonthGroup for year labels
-  constructor(dataObj) {
-    super(dataObj.yearsData, YearBlock);
-    this.width = 4;
-  }
-}
-
 class DataBlock extends HasRepresentation {
-  // An actual group of {config.monthBlockSize} months for several years
-  constructor(data, width){
+  // An actual group of {config.monthBlockSize} months or years for several years
+  constructor(data, width, hasGrid){
     super();
     this.data = data;
     //TODO: dynamically determine width either based off of monthsData or based on some statically stored data (probably better that way)
+    console.log(this.width);
     this.width = width;
   }
   draw() {
-    let width = (config.daySize+config.interBoxPadding)*this.width + (2*config.hPadding);
-    let height = config.monthBlockSize*(config.daySize + (2*config.vPadding));
+    this.drawGrid();
+    // represent items
+    let y = config.innerGridThickness/2;
+    let x = config.innerGridThickness/2;
+    for(let i=0; i<this.data.length; i++){
+      this.data[i].buildRepresentation(this.representation, x, y);
+      y += ((2*config.vPadding)+config.daySize);
+    }
+  }
+  drawGrid() {
+    let height = config.monthBlockSize*(config.daySize + (2*config.vPadding))+config.innerGridThickness;
+    let width = this.width;
     let rect = this.representation.rect(width, height);
     //TODO: maybe leave colors as an easter egg? :)
     //const items = ["blue", "red", "aqua", "lime", "fuchsia", "purple"]
@@ -209,29 +203,8 @@ class DataBlock extends HasRepresentation {
     //rect.attr({ fill: color });
     rect.attr({ fill: 'white' });
     rect.attr({ x: 0, y: 0 });
-    rect.attr({ stroke: '#000', 'stroke-width': 2});
+    rect.attr({ stroke: '#000', 'stroke-width': config.innerGridThickness});
     rect.front();
-    // represent months
-    for(let idx in this.data){
-      let dataObj = this.data[idx];
-      const y = ((2*config.vPadding)+config.daySize)*idx;
-      dataObj.buildRepresentation(this.representation, 0, y);
-      //here we're not storing the representation of a given month as it's already stored in the data object
-    }
-  }
-}
-
-class MonthBlock extends DataBlock {
-  // An actual group of {config.monthBlockSize} months for several years
-  constructor(data, width){
-    super(data, width);
-  }
-}
-
-class YearBlock extends DataBlock {
-  // An actual group of {config.monthBlockSize} months for several years
-  constructor(data, width){
-    super(data, width);
   }
 }
 
@@ -248,7 +221,7 @@ class CalendarRepresentation extends HasRepresentation {
     let drawingxOffset = this.xOffset + config.calendarBorderThickness*1.5;
     let drawingyOffset = this.yOffset + config.textSize*3 + config.calendarBorderThickness*1.5;
     this.drawYearList(drawingxOffset, drawingyOffset);
-    let yearListWidth = 2*(config.hPadding+config.daySize);
+    let yearListWidth = config.yearCellWidth + config.innerGridThickness;
     drawingxOffset += yearListWidth;
     drawingxOffset = this.drawMonthGroups(drawingxOffset, drawingyOffset);
     console.log(drawingyOffset);
@@ -257,23 +230,29 @@ class CalendarRepresentation extends HasRepresentation {
     return {y: currentYOffset, x: drawingxOffset + this.xOffset + config.calendarBorderThickness*1.5}
   }
   drawYearList(xOffset, yOffset){
-    let yg = new YearGroup(this.data);
+    //TODO fix all these repeated width, like config.yearCellWidth
+    let width = config.yearCellWidth + config.innerGridThickness;
+    //txt
+    let yg = new DataGroup(this.data.yearsData, width);
     yg.buildRepresentation(this.representation, xOffset, yOffset);
   }
   drawMonthLabels(xOffset, yOffset, maxDays, monthName){
     let text = this.representation.text(monthName);
     HasRepresentation.styleText(text, config.textSize*0.8);
-    text.cx(((maxDays*(config.daySize+config.interBoxPadding)+2*config.hPadding)/2 + xOffset)
+    text.cx((((maxDays*config.daySize) + ((maxDays-1) * config.interBoxPadding)+2*config.hPadding)/2 + xOffset)
     + (text.length()/2));
     text.cy(45)
   }
   drawMonthGroups(xOffset, yOffset) {
     //draw months
     for (let i=0; i<config.monthsLabels.length; i++) {
-      let mg = new MonthGroup(config.monthsLabels[i], this.data);
+      let monthLabel = config.monthsLabels[i];
+      let data = this.data.yearsData.map(year => year.monthsData[monthLabel.name]);
+      let width = (config.daySize*monthLabel.maxDays) + (config.interBoxPadding*(monthLabel.maxDays-1)) + (2*config.hPadding) + (config.innerGridThickness);
+      let mg = new DataGroup(data, width);
       mg.buildRepresentation(this.representation, xOffset, yOffset);
-      this.drawMonthLabels(xOffset, yOffset, mg.maxDays, mg.monthName);
-      xOffset += (2*config.hPadding + (mg.maxDays*(config.daySize+config.interBoxPadding)));
+      this.drawMonthLabels(xOffset, yOffset, monthLabel.maxDays, monthLabel.name);
+      xOffset += width;
     }
     return xOffset;
   }
