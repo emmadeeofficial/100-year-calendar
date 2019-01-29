@@ -265,5 +265,5 @@ function generateCalendar(startYear) {
   masterDraw.size(width, height);
   console.log("Execution took " + (Date.now() - startTime) + " ms");
   //TODO: Trigger download of the SVG?
-  //console.log(masterDraw.svg())
+  console.log(masterDraw.svg())
 }
