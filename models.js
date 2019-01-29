@@ -1,7 +1,7 @@
 class HasRepresentation {
   // Parent class for all objects that have a representation in the SVG document
   constructor() {
-    // initialize properties as undefined here for clarity
+    // initialize properties as undefined here for clarity, could be done in a public field once these are more widely implemented
     this.x = undefined;
     this.y = undefined;
     this.representation = undefined;
@@ -17,7 +17,7 @@ class HasRepresentation {
   }
   static styleText(text, textSize) {
     text.font({
-      family: 'Source Sans Pro',
+      family: config.styling.font,
       size: textSize,
       anchor: 'middle',
       align: 'middle'
@@ -150,9 +150,9 @@ class DataGroup extends HasRepresentation {
   draw() {
     // Group year and create respective blocks
     let y = 0;
-    const blockHeight = config.styling.monthBlockSize*(config.styling.cellHeight)+config.styling.innerGridBorderThickness;
-    for(let i=0; i*config.styling.monthBlockSize<config.data.period; i++){
-      let slice = this.data.slice(i*config.styling.monthBlockSize, (i+1)*config.styling.monthBlockSize);
+    const blockHeight = config.data.yearBlockSize*(config.styling.cellHeight)+config.styling.innerGridBorderThickness;
+    for(let i=0; i*config.data.yearBlockSize<config.data.period; i++){
+      let slice = this.data.slice(i*config.data.yearBlockSize, (i+1)*config.data.yearBlockSize);
       let block = new DataBlock(slice, this.width, blockHeight);
       block.buildRepresentation(this.representation, 0, y);
       this.blocks.push(block);
@@ -210,8 +210,8 @@ class CalendarRepresentation extends HasRepresentation {
     let canvasWidth;
     yearListWidth = this.drawYearList(this.xOffset, yOffsetWithLabels);
     monthGroupsWidth = this.drawMonthGroups(this.xOffset + yearListWidth, yOffsetWithLabels);
-    // remove the doubly accounted this.xOffset. This could obviously be cleaned up, eventually
-    gridHeight = this.drawCalendarBorder(this.xOffset, yOffsetWithLabels, this.xOffset);
+    // TODO: This code could be cleaned up to limit repetitions, eventually.
+    gridHeight = this.drawCalendarBorder(this.xOffset - 1.5*config.styling.calendarBorderThickness, yOffsetWithLabels - 1.5*config.styling.calendarBorderThickness, yearListWidth + monthGroupsWidth + 1.5*config.styling.calendarBorderThickness);
     canvasHeight = config.styling.monthLabelsHeight + gridHeight + 2*config.styling.calendarBorderThickness + 2*this.yOffset;
     canvasWidth = yearListWidth + monthGroupsWidth + 2*config.styling.calendarBorderThickness + 2*this.xOffset;
     return {width: canvasWidth, height: canvasHeight}
@@ -245,7 +245,7 @@ class CalendarRepresentation extends HasRepresentation {
   }
   drawCalendarBorder(xOffset, yOffset, width) {
     // draw bounding box
-    let height = (config.data.period*(config.styling.cellHeight)+config.styling.calendarBorderThickness);
+    let height = (config.data.period*(config.styling.cellHeight)+2*config.styling.calendarBorderThickness);
     let rect;
     width -= 0.5*config.styling.calendarBorderThickness;
     rect = this.representation.rect(width, height);
