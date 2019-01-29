@@ -17,7 +17,7 @@ The code is written in JavaScript and is highly configurable. It uses SVG.js (to
 ## Examples
 A lightweight snapshot can be found at [sample_exports/sample_export_partial.png](sample_exports/sample_export_partial.png "A sample portion of the calendar")
 
-Full sample exports (for a 100 year calendar starting in 1989) are provided in the sample_exports/ folder.
+Full sample exports (for a 100 year calendar starting in 1989) are provided in the [sample_exports/ folder](sample_exports/).
 
 ## Prior Art
 Leon Eckert created [a Python script](https://github.com/leoneckert/100-year-calendar) which generates an ASCII version of On Kawara's original calendar.
@@ -27,7 +27,7 @@ Similarly, [Tim Urban](https://waitbutwhy.com/) offers a ["Life in Weeks" calend
 ## How To Use This
 At the moment, usage of this script is a little hacky. In the future, I hope to make this easier to use by providing a convenient front-end interface.
 
-At the moment, one needs to open the code/index.html file in their browser. The calendar is then generated and should appear after a short wait (~12 seconds on a 2017 laptop for a full 100 year calendar). The calendar's data (e.g. start date) and styling can be largely configured by editing the values of the `config` constant in code/main.js.
+At the moment, one needs to open the [code/index.html](code/index.html) file in their browser. The calendar is then generated and should appear after a short wait (~12 seconds on a 2017 laptop for a full 100 year calendar). The calendar's data (e.g. start date) and styling can be largely configured by editing the values of the `config` constant in [code/main.js](code/main.js).
 
 ## Future versions/desired features
 My wishlist for future versions:
