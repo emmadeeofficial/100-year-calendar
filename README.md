@@ -31,18 +31,18 @@ At the moment, one needs to open the [code/index.html](code/index.html) file in 
 
 ## Future versions/desired features
 My wishlist for future versions:
-* **Port this client-side code to server-side**: it would be nice to have this code run on a e.g. Node.js server which would do the computation and serve the finished product (in SVG or some other format) directly to the user.
-* **Direct "Save As"**: at the moment, the SVG file is displayed inline in the HTML document's DOM. We would like to enable users to directly save the SVG file.
-* **Reduce SVG filesize**: a full 100 year calendar is about 15 MB, which could be reduced by drawing less individual objects.
-* **Automatically rasterize fonts**: at the moment, fonts at called for explicitly in the SVG, and rasterization is done by importing the file in a vector drawing software and manually rasterizing them.
-* **Export in printer-friendly formats**: SVG was primarily designed for the web, and while it's convenient to use when generating a calendar using JavaScript, printers generally prefer PDF or PS files. A direct export to that format would be desirable.
-* **Recalculate dates only, not the calendar's layout**: this could be a nice optimization for vanity's sake, but is not a high priority given the relative efficiency of the current code.
-* **Provide basic loading/progress bar**: to ease the user's nerves while their computer's fans blow up.
-* **Create vertical version**: where years are on the top and months flow vertically.
-* **Provide multiple themes**: multiple pre-set themes would be a good way to accommodate different tastes. After all, if you have to look at something for the next 100 years, it might as well look good to you!
-* **Refactor calendar generation code**: could be made a bit easier to read.
-* **Provide for configurable "highlighted" day of the week**: at the moment, the calendar highlights Sundays, but I would prefer to let the user chose which day(s) to highlight.
-* **Proper package management**: using .js copies of libraries is not ideal
+* [ ] **Port this client-side code to server-side**: it would be nice to have this code run on a e.g. Node.js server which would do the computation and serve the finished product (in SVG or some other format) directly to the user.
+* [ ] **Direct "Save As"**: at the moment, the SVG file is displayed inline in the HTML document's DOM. We would like to enable users to directly save the SVG file.
+* [ ] **Reduce SVG filesize**: a full 100 year calendar is about 15 MB, which could be reduced by drawing less individual objects.
+* [ ] **Automatically rasterize fonts**: at the moment, fonts at called for explicitly in the SVG, and rasterization is done by importing the file in a vector drawing software and manually rasterizing them.
+* [ ] **Export in printer-friendly formats**: SVG was primarily designed for the web, and while it's convenient to use when generating a calendar using JavaScript, printers generally prefer PDF or PS files. A direct export to that format would be desirable.
+* [ ] **Recalculate dates only, not the calendar's layout**: this could be a nice optimization for vanity's sake, but is not a high priority given the relative efficiency of the current code.
+* [ ] **Provide basic loading/progress bar**: to ease the user's nerves while their computer's fans blow up.
+* [ ] **Create vertical version**: where years are on the top and months flow vertically.
+* [ ] **Provide multiple themes**: multiple pre-set themes would be a good way to accommodate different tastes. After all, if you have to look at something for the next 100 years, it might as well look good to you!
+* [ ] **Refactor calendar generation code**: could be made a bit easier to read.
+* [ ] **Provide for configurable "highlighted" day of the week**: at the moment, the calendar highlights Sundays, but I would prefer to let the user chose which day(s) to highlight.
+* [ ] **Proper package management**: using .js copies of libraries is not ideal
 
 ## License
 All the original code of this project is released under the MIT License.
