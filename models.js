@@ -245,7 +245,7 @@ class CalendarRepresentation extends HasRepresentation {
   }
   drawCalendarBorder(xOffset, yOffset, width) {
     // draw bounding box
-    let height = (config.data.period*(config.styling.cellHeight)+2*config.styling.calendarBorderThickness);
+    let height = (config.data.period*(config.styling.cellHeight)+(((config.data.period/config.data.yearBlockSize)-2)*config.styling.innerGridBorderThickness)+2*config.styling.calendarBorderThickness);
     let rect;
     width -= 0.5*config.styling.calendarBorderThickness;
     rect = this.representation.rect(width, height);
